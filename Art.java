@@ -3,9 +3,6 @@
 //Do save/save As soon! It should be somewhat simple (have a File reference in memory)
 //Opening images also shouldn’t be so bad I think.
 
-
-
-
 /*
  * Nicholas Marthinuss
  * https://github.com/nmarth2993
@@ -15,7 +12,7 @@
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
+import java.util.ArrayList;
 
 import javax.swing.*;
 
@@ -74,7 +71,8 @@ may also be saved to an image file
 //XXX
 //TODO: clean up the code and handle data structure better. brushStroke class with a point, size, and stroke type
 //TODO: synchronize the drawing of the shapes to avoid the 'lag' when moving mouse quickly
-//https://docs.oracle.com/javase/tutorial/uiswing/concurrency/
+//		https://docs.oracle.com/javase/tutorial/uiswing/concurrency/
+//TODO: Add text support that allows size, color choices
 
 //XXX
 
@@ -84,50 +82,56 @@ setting size:
     are linked (they both update with each other) a button at the bottom will submit the choice of the size.
 */
 
-public class Art {
-    JFrame frame;
-    RainbowPanel panel;
-    MouseMove mouseTrack;
-    SizeListener sizeListener;
-    JMenuBar menubar;
+public class ArtTESTSPACE {
+	JFrame frame;
+	RainbowPanel panel;
+	MouseMove mouseTrack;
+	SizeListener sizeListener;
+	JMenuBar menubar;
 
-    JMenu file;
-    JMenuItem newFile;
-    JMenuItem open;
-    JMenuItem save;
-    JMenuItem saveAs;
-    JMenuItem exit;
+	JMenu file;
+	JMenuItem newFile;
+	JMenuItem open;
+	JMenuItem save;
+	JMenuItem saveAs;
+	JMenuItem exit;
 
-    JMenu options;
-    JMenuItem size;
-    JMenuItem brushType;
-    JMenuItem color;
+	JMenu options;
+	JMenuItem size;
+	JMenuItem brushType;
+	JMenuItem color;
+	JMenuItem bgColor;
 
-    JMenu edit;
-    JMenuItem undo;
-    JMenuItem redo;
+	JMenu edit;
+	JMenuItem undo;
+	JMenuItem redo;
 
-    JMenu about;
-    JMenuItem aboutme;
+	JMenu about;
+	JMenuItem aboutme;
 
-    ArrayList<Point> pointList;
-    ArrayList<Integer> sizeList;
+	Color markColor;
 
-    /*
-     * JMenuItem[] fileMenuItems; JMenuItem[] optionMenuItems; JMenuItem[]
-     * editMenuItems; JMenuItem[] aboutMenuItems;
-     *
-     * JMenu[] allMenus; JMenuItem[][] allMenuItems;
-     */
+//	ArrayList<Point> pointList;
+//	ArrayList<Integer> sizeList;
 
-    /*
-     * JMenuItem[] fileMenuItems = { newFile, open, save, saveAs, exit };
-     * JMenuItem[] optionMenuItems = { size, brushType, color }; JMenuItem[]
-     * editMenuItems = { undo, redo }; JMenuItem[] aboutMenuItems = { aboutme };
-     *
-     * JMenu[] allMenus = { file, option, edit, about }; JMenuItem[][] allMenuItems
-     * = { fileMenuItems, optionMenuItems, editMenuItems, aboutMenuItems };
-     */
+	ArrayList<Mark> markList;
+//	XXX: revisit: ArrayList<Stroke> strokeList;
+
+	/*
+	 * JMenuItem[] fileMenuItems; JMenuItem[] optionMenuItems; JMenuItem[]
+	 * editMenuItems; JMenuItem[] aboutMenuItems;
+	 *
+	 * JMenu[] allMenus; JMenuItem[][] allMenuItems;
+	 */
+
+	/*
+	 * JMenuItem[] fileMenuItems = { newFile, open, save, saveAs, exit };
+	 * JMenuItem[] optionMenuItems = { size, brushType, color }; JMenuItem[]
+	 * editMenuItems = { undo, redo }; JMenuItem[] aboutMenuItems = { aboutme };
+	 *
+	 * JMenu[] allMenus = { file, option, edit, about }; JMenuItem[][] allMenuItems
+	 * = { fileMenuItems, optionMenuItems, editMenuItems, aboutMenuItems };
+	 */
 
 //    final JMenu[] menus = { file, option, edit, about };
 //    final String[] menuTitles = { "File", "Option", "Edit", "About" };
@@ -149,70 +153,75 @@ public class Art {
 //    file.add(fileMenuItems[i]);
 //}
 
-    public Art() {
+	public ArtTESTSPACE() {
 
-        frame = new JFrame();
-        mouseTrack = new MouseMove();
-        panel = new RainbowPanel();
-        sizeListener = new SizeListener();
+		frame = new JFrame();
+		mouseTrack = new MouseMove();
+		panel = new RainbowPanel();
+		sizeListener = new SizeListener();
 
-        createMenus();
+//		markColor = Color.BLACK;
 
-        panel.addMouseMotionListener(mouseTrack);
-        panel.addMouseWheelListener(mouseTrack);
-        panel.addMouseListener(mouseTrack);
+		createMenus();
 
-        frame.setPreferredSize(new Dimension(500, 500));
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setContentPane(panel);
-        frame.setJMenuBar(menubar);
-        frame.pack();
-        frame.setVisible(true);
+		panel.addMouseMotionListener(mouseTrack);
+		panel.addMouseWheelListener(mouseTrack);
+		panel.addMouseListener(mouseTrack);
 
-    }
+		frame.setPreferredSize(new Dimension(500, 500));
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setContentPane(panel);
+		frame.setJMenuBar(menubar);
+		frame.pack();
+		frame.setVisible(true);
 
-    private void createMenus() {
-        menubar = new JMenuBar();
+	}
 
-        file = new JMenu("File");
-        newFile = new JMenuItem("New");
-        open = new JMenuItem("Open");
-        save = new JMenuItem("Save");
-        saveAs = new JMenuItem("Save As...");
-        exit = new JMenuItem("Exit");
+	private void createMenus() {
+		menubar = new JMenuBar();
 
-        options = new JMenu("Options");
-        size = new JMenuItem("Size");
-        brushType = new JMenuItem("Brush type");
-        color = new JMenuItem("Choose color");
+		file = new JMenu("File");
+		newFile = new JMenuItem("New");
+		open = new JMenuItem("Open");
+		save = new JMenuItem("Save");
+		saveAs = new JMenuItem("Save As...");
+		exit = new JMenuItem("Exit");
 
-        edit = new JMenu("Edit");
-        undo = new JMenuItem("Undo");
-        redo = new JMenuItem("Redo");
+		options = new JMenu("Options");
+		size = new JMenuItem("Size");
+		brushType = new JMenuItem("Brush type");
+		color = new JMenuItem("Brush color");
+		bgColor = new JMenuItem("Background color");
 
-        about = new JMenu("About");
-        aboutme = new JMenuItem("About");
+		edit = new JMenu("Edit");
+		undo = new JMenuItem("Undo");
+		redo = new JMenuItem("Redo");
 
-        // TODO: using one actionListener for each menu like below
+		about = new JMenu("About");
+		aboutme = new JMenuItem("About");
 
-        FileMenuListener fmListen = new FileMenuListener();
-        newFile.addActionListener(fmListen);
-        newFile.setActionCommand("new");
-        open.addActionListener(fmListen);
-        open.setActionCommand("open");
-        save.addActionListener(fmListen);
-        save.setActionCommand("save");
-        saveAs.addActionListener(fmListen);
-        saveAs.setActionCommand("saveAs");
-        exit.addActionListener(fmListen);
-        exit.setActionCommand("exit");
+		// TODO: using one actionListener for each menu like below
 
-        OptionsMenuListener optionListen = new OptionsMenuListener();
-        size.addActionListener(sizeListener);
-        brushType.addActionListener(optionListen);
-        brushType.setActionCommand("brush");
-        color.addActionListener(optionListen);
-        color.setActionCommand("color");
+		FileMenuListener fmListen = new FileMenuListener();
+		newFile.addActionListener(fmListen);
+		newFile.setActionCommand("new");
+		open.addActionListener(fmListen);
+		open.setActionCommand("open");
+		save.addActionListener(fmListen);
+		save.setActionCommand("save");
+		saveAs.addActionListener(fmListen);
+		saveAs.setActionCommand("saveAs");
+		exit.addActionListener(fmListen);
+		exit.setActionCommand("exit");
+
+		OptionsMenuListener optionListen = new OptionsMenuListener();
+		size.addActionListener(sizeListener);
+		brushType.addActionListener(optionListen);
+		brushType.setActionCommand("brush");
+		color.addActionListener(optionListen);
+		color.setActionCommand("color");
+		bgColor.addActionListener(optionListen);
+		bgColor.setActionCommand("bgcolor");
 
 //        aboutme.addActionListener(new AboutListener());
 //        exit.addActionListener(new ExitListener());
@@ -220,560 +229,579 @@ public class Art {
 //        
 //        }
 
-        // create an array here that contains all of the objects... later
+		// create an array here that contains all of the objects... later
 
-        file.add(newFile);
-        file.add(open);
-        file.add(save);
-        file.add(saveAs);
-        file.add(exit);
+		file.add(newFile);
+		file.add(open);
+		file.add(save);
+		file.add(saveAs);
+		file.add(exit);
 
-        options.add(size);
-        options.add(brushType);
-        options.add(color);
+		options.add(size);
+		options.add(brushType);
+		options.add(color);
+		options.add(bgColor);
 
-        edit.add(undo);
-        edit.add(redo);
+		edit.add(undo);
+		edit.add(redo);
 
-        about.add(aboutme);
+		about.add(aboutme);
 
-        menubar.add(file);
-        menubar.add(options);
-        menubar.add(edit);
-        menubar.add(about);
+		menubar.add(file);
+		menubar.add(options);
+		menubar.add(edit);
+		menubar.add(about);
 
 //        for (int i = 0; i < fileMenuItems.length; i++) {
 //            System.out.println(fileMenuItems[i]);
 //        }
 
-        /*
-         * for (int i = 0; i < allMenuItems.length; i++) { for (int j = 0; j <
-         * allMenuItems[i].length; j++) { try { allMenus[i].add(allMenuItems[i][j]); }
-         * catch (Exception e) { e.printStackTrace(); } } }
-         */
+		/*
+		 * for (int i = 0; i < allMenuItems.length; i++) { for (int j = 0; j <
+		 * allMenuItems[i].length; j++) { try { allMenus[i].add(allMenuItems[i][j]); }
+		 * catch (Exception e) { e.printStackTrace(); } } }
+		 */
 
-    }
+	}
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                JFrame.setDefaultLookAndFeelDecorated(true);
-                new Art();
-            }
-        });
-    }
+	public static void main(String[] args) {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				JFrame.setDefaultLookAndFeelDecorated(true);
+				new ArtTESTSPACE();
+			}
+		});
+	}
 
-    // TODO: examing having one action listener for all or each one separate or one
-    // to handle certain groups that are similar (save/save as)
+	// TODO: examing having one action listener for all or each one separate or one
+	// to handle certain groups that are similar (save/save as)
 
-    class FileMenuListener implements ActionListener {
+	class FileMenuListener implements ActionListener {
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String command = e.getActionCommand();
-            if (command.equals("new")) {
-                mouseTrack.clear();
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String command = e.getActionCommand();
+			if (command.equals("new")) {
+				mouseTrack.clear();
 //                sizeList.removeAll(sizeList);
 //                pointList.removeAll(pointList);
-            }
-            System.out.println(command);
-        }
+			}
+			System.out.println(command);
+		}
 
-    }
-    
-    class OptionsMenuListener implements ActionListener {
-    	public void actionPerformed(ActionEvent e) {
-    		if (e.getActionCommand().equals("color")) {
-    			Color c = JColorChooser.showDialog(panel, "Choose a color", null);
-    			panel.setBrushColor(c);
-    		}
-    		else if (e.getActionCommand().equals("bgcolor")) { //TODO: add a background color changer as well
-    			Color c = JColorChooser.showDialog(panel, "Choose a background color", null);
-    			panel.setBackground(c);
-    		}
-    	}
-    }
+	}
 
-    /*
-     * class AboutListener implements ActionListener {
-     *
-     * JFrame frame; JPanel panel; JLabel label;
-     *
-     * @Override public void actionPerformed(ActionEvent e) {
-     * System.out.println(e.getSource()); frame = new JFrame("About"); panel = new
-     * JPanel(); label = new JLabel("This is some info"); panel.add(label);
-     * frame.setContentPane(panel); frame.setPreferredSize(new Dimension(150, 150));
-     * frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-     * frame.setVisible(true); frame.pack();
-     *
-     * }
-     *
-     * }
-     *
-     * class ExitListener implements ActionListener {
-     *
-     * @Override public void actionPerformed(ActionEvent e) {
-     * frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING)); }
-     *
-     * }
-     */
+	class OptionsMenuListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			if (e.getActionCommand().equals("color")) {
+				Color c = JColorChooser.showDialog(panel, "Choose a color", null);
+				panel.setBrushColor(c);
+			} else if (e.getActionCommand().equals("bgcolor")) { // TODO: add a background color changer to the menu as
+																	// well
+				Color bg = JColorChooser.showDialog(panel, "Choose a background color", null);
+				panel.setBackground(new Color(bg.getRGB()));
+			}
+		}
+	}
 
-    class SizeListener implements ActionListener {
-        JFrame sizeFrame;
-        JPanel sizePanel;
-        JTextField sizeInput;
-        JLabel sizePrompt;
-        int size;
+	/*
+	 * class AboutListener implements ActionListener {
+	 *
+	 * JFrame frame; JPanel panel; JLabel label;
+	 *
+	 * @Override public void actionPerformed(ActionEvent e) {
+	 * System.out.println(e.getSource()); frame = new JFrame("About"); panel = new
+	 * JPanel(); label = new JLabel("This is some info"); panel.add(label);
+	 * frame.setContentPane(panel); frame.setPreferredSize(new Dimension(150, 150));
+	 * frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	 * frame.setVisible(true); frame.pack();
+	 *
+	 * }
+	 *
+	 * }
+	 *
+	 * class ExitListener implements ActionListener {
+	 *
+	 * @Override public void actionPerformed(ActionEvent e) {
+	 * frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING)); }
+	 *
+	 * }
+	 */
 
-        @Override
-        public void actionPerformed(ActionEvent e) { // TODO: clean up this code aaaaaaaaaahhhhhhhhhh
-            if (sizeFrame == null) {
-                KeyListener keyListener = new keyListener();
-                sizeFrame = new JFrame();
-                sizePanel = new JPanel();
-                sizeInput = new JTextField(5);
-                sizePrompt = new JLabel("Enter the size: ");
+	class SizeListener implements ActionListener {
+		JFrame sizeFrame;
+		JPanel sizePanel;
+		JTextField sizeInput;
+		JLabel sizePrompt;
+		int size;
 
-                sizeFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		@Override
+		public void actionPerformed(ActionEvent e) { // TODO: clean up this code aaaaaaaaaahhhhhhhhhh
+			if (sizeFrame == null) {
+				KeyListener keyListener = new keyListener();
+				sizeFrame = new JFrame();
+				sizePanel = new JPanel();
+				sizeInput = new JTextField(5);
+				sizePrompt = new JLabel("Enter the size: ");
 
-                sizeInput.addKeyListener(keyListener);
-                sizeFrame.setContentPane(sizePanel);
-                sizePanel.add(sizePrompt);
-                sizePanel.add(sizeInput);
+				sizeFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                sizeFrame.setVisible(true);
-                sizeFrame.pack();
-            }
+				sizeInput.addKeyListener(keyListener);
+				sizeFrame.setContentPane(sizePanel);
+				sizePanel.add(sizePrompt);
+				sizePanel.add(sizeInput);
+
+				sizeFrame.setVisible(true);
+				sizeFrame.pack();
+			}
 
 //            System.out.println("button clicked, but i'm tired now...");
-        }
+		}
 
-        class keyListener implements KeyListener {
+		class keyListener implements KeyListener {
 
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    try {
-                        size = Integer.parseInt(sizeInput.getText());
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					try {
+						size = Integer.parseInt(sizeInput.getText());
 
-                        // need upper limit
-                        // lower limit is the same as before (3 I think)
-                        // close
-                    } catch (NumberFormatException exception) {
+						// need upper limit
+						// lower limit is the same as before (3 I think)
+						// close
+					} catch (NumberFormatException exception) {
 //                        exception.printStackTrace();
-                        System.out.println("Invalid option");
-                        size = 10;
-                    }
-                    mouseTrack.setDiameter(size);
-                    sizeFrame.dispatchEvent(new WindowEvent(sizeFrame, WindowEvent.WINDOW_CLOSING));
-                    System.out.println(size);
-                }
+						System.out.println("Invalid option");
+						size = 10;
+					}
+					mouseTrack.setDiameter(size);
+					sizeFrame.dispose();
+//					System.out.println(sizeFrame.getContentPane());
+					sizeFrame = null;
+					System.out.println(size);
+				}
 
-            }
+			}
 
-            @Override
-            public void keyReleased(KeyEvent e) {
-            }
+			@Override
+			public void keyReleased(KeyEvent e) {
+			}
 
-            @Override
-            public void keyTyped(KeyEvent e) {
-            }
+			@Override
+			public void keyTyped(KeyEvent e) {
+			}
 
-        }
+		}
 
-        public int getUserSize() {
-            return size;
-        }
+		public int getUserSize() {
+			return size;
+		}
 
-    }
+	}
 
-    class RainbowPanel extends JPanel {
+	class RainbowPanel extends JPanel {
 
-        final int sleepVal = 5;
-        Color c1;
-        Color brushColor;
-        int x = 0;
-        int y = 300;
+		final int sleepVal = 5;
+		Color c1;
+		Color brushColor;
+		Color bgColor;
+		int x = 0;
+		int y = 300;
 
-        int circleWidth = 30;
-        int circleHeight = 30;
+		int circleWidth = 30;
+		int circleHeight = 30;
 
-        Point mousePos;
+		Point mousePos;
 
-        int mouseScroll;
-        
-        public void setBrushColor(Color c) {
-        	brushColor = c;
-        }
-        
-        public Color getBrushColor() {
-        	return brushColor;
-        }
+		int mouseScroll;
 
-        public RainbowPanel() {
-            mousePos = new Point(0, 0);
-            mouseScroll = 0;
-            RGBColor();
-            animate();
+		public void setBrushColor(Color c) {
+			brushColor = c;
+		}
+
+		public Color getBrushColor() {
+			return brushColor;
+		}
+
+		public RainbowPanel() {
+			mousePos = new Point(0, 0);
+			mouseScroll = 0;
+			RGBColor();
+			animate();
 //            gradient();
-            mouseWheel();
+			mouseWheel();
 
 //            diag();
-        }
+		}
 
-        public void diag() {
-            new Thread() {
-                public void run() {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    for (;;) {
-                        System.out.println("cWidth: " + circleWidth);
-                        System.out.println("diameter: " + mouseTrack.getDiameter());
-                        System.out.println("userSize: " + sizeListener.getUserSize());
-                    }
-                }
-            }.start();
-        }
+		public void diag() {
+			new Thread() {
+				public void run() {
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					for (;;) {
+						System.out.println("cWidth: " + circleWidth);
+						System.out.println("diameter: " + mouseTrack.getDiameter());
+						System.out.println("userSize: " + sizeListener.getUserSize());
+					}
+				}
+			}.start();
+		}
 
-        public void animate() {
-            Thread animate = new Thread() {
-                public void run() {
-                    for (;;) {
-                        try {
-                            Thread.sleep(100); //FIXME: THIS IS THE TIMING MECHANISM THAT I SLOWED DOWN FOR TESTING, CHANGE BACK TO 10ms REFRESH RATE
-                        } catch (InterruptedException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
-                        repaint();
-                    }
-                }
-            };
-            animate.start();
-        }
+		public void animate() {
+			Thread animate = new Thread() {
+				public void run() {
+					for (;;) {
+						try {
+							Thread.sleep(10); // REFRESH RATE: 10ms
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						repaint();
+					}
+				}
+			};
+			animate.start();
+		}
 
-        public void mouseWheel() { ////// XXX: Added thread names for profiling
-            Thread mouseWheel = new Thread() {
-                public void run() {
-                    for (;;) {
-                        mouseScroll = mouseTrack.getMouseScroll();
+		public void mouseWheel() { // XXX: Added thread names for profiling
+			Thread mouseWheel = new Thread() {
+				public void run() {
+					for (;;) {
+						mouseScroll = mouseTrack.getMouseScroll();
 //                        System.out.println(mouseScroll);
-                        if (mouseScroll != 0) {
-                            if (circleWidth - mouseScroll < 3) {
-                                circleWidth = 3;
-                            } else if (circleWidth + mouseScroll > 100) {
-                                circleWidth = 100;
-                            } else {
-                                circleWidth += mouseScroll;
-                            }
-                            circleHeight = circleWidth;
-                        }
-                    }
-                }
-            };
-            mouseWheel.start();
-        }
+						if (mouseScroll != 0) {
+							if (circleWidth - mouseScroll < 3) {
+								circleWidth = 3;
+							} else if (circleWidth + mouseScroll > 100) {
+								circleWidth = 100;
+							} else {
+								circleWidth += mouseScroll;
+							}
+							circleHeight = circleWidth;
+						}
+					}
+				}
+			};
+			mouseWheel.start();
+		}
 
-        public void gradient() {
-            Thread gradient = new Thread() {
-                public void run() {
-                    for (;;) {
-                        for (int i = 0; i < 200; i++) {
-                            x++;
-                            y--;
-                            try {
-                                Thread.sleep(sleepVal);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        for (int i = 0; i < 200; i++) {
-                            x++;
-                            y++;
-                            try {
-                                Thread.sleep(sleepVal);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        for (int i = 0; i < 200; i++) {
-                            x--;
-                            y++;
-                            try {
-                                Thread.sleep(sleepVal);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        for (int i = 0; i < 200; i++) {
-                            x--;
-                            y--;
-                            try {
-                                Thread.sleep(sleepVal);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
+		public void gradient() {
+			Thread gradient = new Thread() {
+				public void run() {
+					for (;;) {
+						for (int i = 0; i < 200; i++) {
+							x++;
+							y--;
+							try {
+								Thread.sleep(sleepVal);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+						for (int i = 0; i < 200; i++) {
+							x++;
+							y++;
+							try {
+								Thread.sleep(sleepVal);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+						for (int i = 0; i < 200; i++) {
+							x--;
+							y++;
+							try {
+								Thread.sleep(sleepVal);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+						for (int i = 0; i < 200; i++) {
+							x--;
+							y--;
+							try {
+								Thread.sleep(sleepVal);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}
 
-            };
-            gradient.start();
-        }
+			};
+			gradient.start();
+		}
 
-        public void RGBColor() {
-            new Thread() {
-                public void run() {
-                    int red = 255;
-                    int blue = 0;
-                    int green = 0;
-                    for (;;) {
-                        for (int i = 0; i < 255; i++) {
-                            green++;
-                            c1 = new Color(red, green, blue);
-                            try {
-                                Thread.sleep(sleepVal);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        for (int i = 0; i < 255; i++) {
-                            red--;
-                            c1 = new Color(red, green, blue);
-                            try {
-                                Thread.sleep(sleepVal);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        for (int i = 0; i < 255; i++) {
-                            blue++;
-                            c1 = new Color(red, green, blue);
-                            try {
-                                Thread.sleep(sleepVal);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        for (int i = 0; i < 255; i++) {
-                            green--;
-                            c1 = new Color(red, green, blue);
-                            try {
-                                Thread.sleep(sleepVal);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        for (int i = 0; i < 255; i++) {
-                            red++;
-                            c1 = new Color(red, green, blue);
-                            try {
-                                Thread.sleep(sleepVal);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        for (int i = 0; i < 255; i++) {
-                            blue--;
-                            c1 = new Color(red, green, blue);
-                            try {
-                                Thread.sleep(sleepVal);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
-            }.start();
-        }
+		public void RGBColor() {
+			new Thread() {
+				public void run() {
+					int red = 255;
+					int blue = 0;
+					int green = 0;
+					for (;;) {
+						for (int i = 0; i < 255; i++) {
+							green++;
+							c1 = new Color(red, green, blue);
+							try {
+								Thread.sleep(sleepVal);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+						for (int i = 0; i < 255; i++) {
+							red--;
+							c1 = new Color(red, green, blue);
+							try {
+								Thread.sleep(sleepVal);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+						for (int i = 0; i < 255; i++) {
+							blue++;
+							c1 = new Color(red, green, blue);
+							try {
+								Thread.sleep(sleepVal);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+						for (int i = 0; i < 255; i++) {
+							green--;
+							c1 = new Color(red, green, blue);
+							try {
+								Thread.sleep(sleepVal);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+						for (int i = 0; i < 255; i++) {
+							red++;
+							c1 = new Color(red, green, blue);
+							try {
+								Thread.sleep(sleepVal);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+						for (int i = 0; i < 255; i++) {
+							blue--;
+							c1 = new Color(red, green, blue);
+							try {
+								Thread.sleep(sleepVal);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+			}.start();
+		}
 
-        public void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D) g;
+		public void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			Graphics2D g2d = (Graphics2D) g;
+
 //            GradientPaint paint;
 //            int colorPattern = mouseTrack.getColorPattern();
-            // below is the gradient code, removed due to performance issues
-            /*
-             * if (colorPattern == 1) { paint = new GradientPaint(x, y, c1, x + 300, y +
-             * 100, Color.BLACK); } else if (colorPattern == 2) { paint = new
-             * GradientPaint(x, y, Color.BLACK, x + 300, y + 100, c1); } else if
-             * (colorPattern == 3) { paint = new GradientPaint(x, y, c1, x + 300, y + 100,
-             * Color.WHITE); } else { paint = new GradientPaint(x, y, Color.WHITE, x + 300,
-             * y + 100, c1); } g2d.setPaint(paint);
-             */
+			// below is the gradient code, removed due to performance issues
+			/*
+			 * if (colorPattern == 1) { paint = new GradientPaint(x, y, c1, x + 300, y +
+			 * 100, Color.BLACK); } else if (colorPattern == 2) { paint = new
+			 * GradientPaint(x, y, Color.BLACK, x + 300, y + 100, c1); } else if
+			 * (colorPattern == 3) { paint = new GradientPaint(x, y, c1, x + 300, y + 100,
+			 * Color.WHITE); } else { paint = new GradientPaint(x, y, Color.WHITE, x + 300,
+			 * y + 100, c1); } g2d.setPaint(paint);
+			 */
 ///////////////////////////////
 //            g2d.setColor(c1); //XXX: temp. disabled color cycling
 ///////////////////////////////
 
 //            ArrayList<Integer> sizeList = mouseTrack.getSizeList();
 //            ArrayList<Point> pointList = mouseTrack.getPointList();
-            
-            g2d.setColor(brushColor); //XXX: ADDING THIS PERMANENTLY TO ALLOW CUSTOM COLORS!
-            //XXX:
-            //XXX
-            //XXX
-            //TODO:
-            //XXX
-            //XXX
-            //THIS IS SOOOOOOOOO IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!:
-            //NEED TO MAKE A CIRCLE CLASS THAT HAS A SIZE AND A COLOR TO BE STORED AND THEN IT DRAWS BASED ON THE COLOR THAT THE CIRCLE HAS STORED
-            
-            
-            
-            Random r = new Random(); //TODO: FOR NOW, using this random to draw each circle a different color
-            for (int i = 0; i < sizeList.size(); i++) {
-            	//FIXME:
-            	brushColor = new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256)); //TODO: this line of code is to be changed
-            	g2d.setColor(brushColor);
-                g2d.fillOval((int) pointList.get(i).getX() - (sizeList.get(i) / 2),
-                        (int) pointList.get(i).getY() - (sizeList.get(i) / 2), sizeList.get(i), sizeList.get(i));
-            }
+
+			g2d.setColor(brushColor); // XXX: ADDING THIS PERMANENTLY TO ALLOW CUSTOM COLORS!
+			// XXX:
+			// XXX
+			// XXX
+			// TODO:
+			// XXX
+			// XXX
+			// THIS IS SOOOOOOOOO
+			// IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!:
+			// NEED TO MAKE A CIRCLE CLASS THAT HAS A SIZE AND A COLOR TO BE STORED AND THEN
+			// IT DRAWS BASED ON THE COLOR THAT THE CIRCLE HAS STORED
+
+//			Random r = new Random(); // TODO: FOR NOW, using this random to draw each circle a different color
+//			for (int i = 0; i < sizeList.size(); i++) {
+			// FIXME:
+//				brushColor = new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256)); // TODO: this line of code is to
+			// be changed
+//				g2d.setColor(brushColor);
+			// TODO: SET THE COLOR TO MARK OBJECT .getColor();
+//				g2d.fillOval((int) pointList.get(i).getX() - (sizeList.get(i) / 2),
+//						(int) pointList.get(i).getY() - (sizeList.get(i) / 2), sizeList.get(i), sizeList.get(i));
+//			}
+			System.out.println("Size: " + markList.size());
+			for (Mark m : markList) {
+				System.out.println("(" + m.getX() + ", " + m.getY() + ")");
+
+			}
+
+			for (Mark m : markList) {
+				g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
+						m.getHeight());
+			}
 
 //            for (Point p : mouseTrack.getPointList()) {
-            // g2d.drawString("Rainbow", (int) p.getX() - 20, (int) p.getY() + 10);
+			// g2d.drawString("Rainbow", (int) p.getX() - 20, (int) p.getY() + 10);
 //                g2d.fillOval((int) p.getX() - (circleWidth / 2), (int) p.getY() - (circleHeight / 2), circleWidth,
 //                        circleHeight);
 //            }
-            // g2d.drawString("Rainbow", (int) mouseTrack.getMouseX() - 20, (int)
-            // mouseTrack.getMouseY() + 10);
-            circleWidth = mouseTrack.getDiameter();
-            circleHeight = circleWidth;
-            
-            g2d.fillOval((int) mouseTrack.getMouseX() - (circleWidth / 2),
-                    (int) mouseTrack.getMouseY() - (circleHeight / 2), circleWidth, circleHeight);
-            // mouseTrack.getMouseY() + 10);
-        }
-    }
+			// g2d.drawString("Rainbow", (int) mouseTrack.getMouseX() - 20, (int)
+			// mouseTrack.getMouseY() + 10);
+			circleWidth = mouseTrack.getDiameter();
+			circleHeight = circleWidth;
 
-    class MouseMove implements MouseMotionListener, MouseWheelListener, MouseListener {
-        Point mousePos;
-        int scroll;
-        int diameter;
-        int colorPattern;
+			g2d.fillOval((int) mouseTrack.getMouseX() - (circleWidth / 2),
+					(int) mouseTrack.getMouseY() - (circleHeight / 2), circleWidth, circleHeight);
+			// mouseTrack.getMouseY() + 10);
+		}
+	}
 
-        final int patternNumber = 4;
+	class MouseMove implements MouseMotionListener, MouseWheelListener, MouseListener {
+		Point mousePos;
+		int scroll;
+		int diameter;
+		int colorPattern;
 
-        public MouseMove() {
-            mousePos = new Point(0, 0);
-            scroll = 0;
-            diameter = 30;
-            colorPattern = 1;
-            pointList = new ArrayList<Point>();
-            sizeList = new ArrayList<Integer>();
-        }
+		final int patternNumber = 4;
 
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            mousePos = e.getPoint();
+		public MouseMove() {
+			mousePos = new Point(-200, -200); // start offscreen
+			scroll = 0;
+			diameter = 30;
+			colorPattern = 1;
+
+			markList = new ArrayList<Mark>();
+
+//			pointList = new ArrayList<Point>();
+//			sizeList = new ArrayList<Integer>();
+		}
+
+		public void addMark(MouseEvent e) {
+			markList.add(new Mark(e.getPoint(), new Dimension(diameter, diameter), markColor));
+		}
+
+		@Override
+		public void mouseDragged(MouseEvent e) {
+			addMark(e);
+			System.out.println(markList.size());
+//			mousePos = e.getPoint();
+//			markList.add(new Mark(mousePos, new Dimension(diameter, diameter), markColor));
 //                    new Point(arg0.getX(), arg0.getY());
-            pointList.add(mousePos);
-            sizeList.add(diameter);
-        }
+//			pointList.add(mousePos);
+//			sizeList.add(diameter);
+		}
 
-        @Override
-        public void mouseMoved(MouseEvent e) {
-            mousePos = new Point(e.getX(), e.getY());
-        }
+		@Override
+		public void mouseMoved(MouseEvent e) {
+			mousePos = new Point(e.getX(), e.getY());
+		}
 
-        public int getMouseX() {
-            return (int) mousePos.getX();
-        }
+		public int getMouseX() {
+			return (int) mousePos.getX();
+		}
 
-        public int getMouseY() {
-            return (int) mousePos.getY();
-        }
+		public int getMouseY() {
+			return (int) mousePos.getY();
+		}
 
-        public ArrayList<Point> getPointList() {
-            return pointList;
-        }
+		public ArrayList<Mark> getMarkList() {
+			return markList;
+		}
 
-        public ArrayList<Integer> getSizeList() {
-            return sizeList;
-        }
+		@Override
+		public void mouseWheelMoved(MouseWheelEvent e) {
+			scroll = -(e.getWheelRotation());
 
-        @Override
-        public void mouseWheelMoved(MouseWheelEvent e) {
-            scroll = -(e.getWheelRotation());
+			if (diameter + scroll < 3) {
+				diameter = 3;
+			} else {
+				diameter += scroll;
+			}
 
-            if (diameter + scroll < 3) {
-                diameter = 3;
-            } else {
-                diameter += scroll;
-            }
+		}
 
-        }
+		public int getMouseScroll() {
+			return scroll;
+		}
 
-        public int getMouseScroll() {
-            return scroll;
-        }
+		public void resetMouseScroll() {
+			scroll = 0;
+		}
 
-        public void resetMouseScroll() {
-            scroll = 0;
-        }
+		public void setDiameter(int d) {
+			if (d < 3) {
+				d = 3;
+			} else if (d > 100) {
+				d = 100;
+			}
+			diameter = d;
+		}
 
-        public void setDiameter(int d) {
-            if (d < 3) {
-                d = 3;
-            } else if (d > 100) {
-                d = 100;
-            }
-            diameter = d;
-        }
+		public int getDiameter() {
+			return diameter;
+		}
 
-        public int getDiameter() {
-            return diameter;
-        }
+		public void incrementColorPattern() {
+			if (colorPattern + 1 > patternNumber) {
+				colorPattern = 1;
+			} else {
+				colorPattern++;
+			}
+		}
 
-        public void incrementColorPattern() {
-            if (colorPattern + 1 > patternNumber) {
-                colorPattern = 1;
-            } else {
-                colorPattern++;
-            }
-        }
+		public int getColorPattern() {
+			return colorPattern;
+		}
 
-        public int getColorPattern() {
-            return colorPattern;
-        }
+		public void clear() {
+			markList.removeAll(markList);
+		}
 
-        public void clear() {
+		@Override
+		public void mouseClicked(MouseEvent e) {
 
-            pointList.removeAll(pointList);
-            sizeList.removeAll(sizeList);
-        }
+			if (e.getButton() == MouseEvent.BUTTON1) {
+				addMark(e);
+			} else if (e.getButton() == MouseEvent.BUTTON3) {
+				incrementColorPattern();
+			} else if (e.getButton() == MouseEvent.BUTTON2) {
+				clear();
+			}
+		}
 
-        @Override
-        public void mouseClicked(MouseEvent e) {
+		@Override
+		public void mouseEntered(MouseEvent e) {
+		}
 
-            if (e.getButton() == MouseEvent.BUTTON1) {
-                mousePos = new Point(e.getX(), e.getY());
-                pointList.add(mousePos);
-                sizeList.add(diameter);
-            } else if (e.getButton() == MouseEvent.BUTTON3) {
-                incrementColorPattern();
-            } else if (e.getButton() == MouseEvent.BUTTON2) {
-                clear();
-            }
-        }
+		@Override
+		public void mouseExited(MouseEvent e) {
+		}
 
-        @Override
-        public void mouseEntered(MouseEvent e) {
-        }
+		@Override
+		public void mousePressed(MouseEvent e) {
+		}
 
-        @Override
-        public void mouseExited(MouseEvent e) {
-        }
+		@Override
+		public void mouseReleased(MouseEvent e) {
+		}
 
-        @Override
-        public void mousePressed(MouseEvent e) {
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-        }
-
-    }
+	}
 }
