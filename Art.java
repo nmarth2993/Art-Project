@@ -702,6 +702,7 @@ public class ArtTESTSPACE {
 		public void mouseDragged(MouseEvent e) {
 			addMark(e);
 			System.out.println(markList.size());
+                        //FIXME: examine how this new change presents itself because the first shape drawn when dragged disappears once the mouse is moved after m1 stops being held down
 //			mousePos = e.getPoint();
 //			markList.add(new Mark(mousePos, new Dimension(diameter, diameter), markColor));
 //                    new Point(arg0.getX(), arg0.getY());
@@ -712,6 +713,7 @@ public class ArtTESTSPACE {
 		@Override
 		public void mouseMoved(MouseEvent e) {
 			mousePos = new Point(e.getX(), e.getY());
+                        
 		}
 
 		public int getMouseX() {
