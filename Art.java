@@ -77,7 +77,7 @@ TODO: setting size:
 
 //XXX: gradients maybe at the end if I have time
 
-public class ArtTESTSPACE {
+public class Art {
 	JFrame frame;
 	RainbowPanel panel;
 	MouseMove mouseTrack;
@@ -141,7 +141,7 @@ public class ArtTESTSPACE {
 	 * it may have something to do with the declaration of the arrays as final?
 	 */
 
-	public ArtTESTSPACE() {
+	public Art() {
 
 		frame = new JFrame();
 		mouseTrack = new MouseMove();
@@ -254,7 +254,7 @@ public class ArtTESTSPACE {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				JFrame.setDefaultLookAndFeelDecorated(true);
-				new ArtTESTSPACE();
+				new Art();
 			}
 		});
 	}
