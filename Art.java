@@ -12,8 +12,11 @@
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.util.ArrayList;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.*;
 
@@ -77,7 +80,7 @@ TODO: setting size:
 
 //XXX: gradients maybe at the end if I have time
 
-public class Art {
+public class ArtTESTSPACE {
 	JFrame frame;
 	RainbowPanel panel;
 	MouseMove mouseTrack;
@@ -103,6 +106,8 @@ public class Art {
 
 	JMenu about;
 	JMenuItem aboutme;
+
+	File drawingFile;
 
 	ArrayList<Mark> markList;
 
@@ -141,9 +146,12 @@ public class Art {
 	 * it may have something to do with the declaration of the arrays as final?
 	 */
 
-	public Art() {
+	public ArtTESTSPACE() {
 
-		frame = new JFrame();
+		// XXX: temporary hard-coding file for testing
+		drawingFile = new File("C:/Users/nTandem/Desktop/ArtPictures/thing.png");
+		//
+		frame = new JFrame("Untitled");
 		mouseTrack = new MouseMove();
 		panel = new RainbowPanel();
 		sizeListener = new SizeListener();
@@ -167,23 +175,33 @@ public class Art {
 		menubar = new JMenuBar();
 
 		file = new JMenu("File");
+		file.setMnemonic('f');
 		newFile = new JMenuItem("New");
+		newFile.setAccelerator(KeyStroke.getKeyStroke("ctrl N"));
 		open = new JMenuItem("Open");
+		open.setAccelerator(KeyStroke.getKeyStroke("ctrl O"));
 		save = new JMenuItem("Save");
+		save.setAccelerator(KeyStroke.getKeyStroke("ctrl S"));
 		saveAs = new JMenuItem("Save As...");
 		exit = new JMenuItem("Exit");
+		exit.setAccelerator(KeyStroke.getKeyStroke("ctrl Q"));
 
 		options = new JMenu("Options");
+		options.setMnemonic('o');
 		size = new JMenuItem("Size");
 		brushType = new JMenuItem("Brush type");
 		color = new JMenuItem("Brush color");
 		bgColor = new JMenuItem("Background color");
 
 		edit = new JMenu("Edit");
+		edit.setMnemonic('e');
 		undo = new JMenuItem("Undo");
+		undo.setAccelerator(KeyStroke.getKeyStroke("ctrl Z"));
 		redo = new JMenuItem("Redo");
+		redo.setAccelerator(KeyStroke.getKeyStroke("ctrl Y"));
 
 		about = new JMenu("About");
+		about.setMnemonic('a');
 		aboutme = new JMenuItem("About");
 
 		// TODO: using one actionListener for each menu like below
@@ -254,7 +272,7 @@ public class Art {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				JFrame.setDefaultLookAndFeelDecorated(true);
-				new Art();
+				new ArtTESTSPACE();
 			}
 		});
 	}
@@ -268,8 +286,39 @@ public class Art {
 		public void actionPerformed(ActionEvent e) {
 			String command = e.getActionCommand();
 			if (command.equals("new")) {
+				if (mouseTrack.isChanged()) {
+					System.out.println("saving...");
+					System.out.println("cleared *");
+					mouseTrack.setChanged(false);
+				}
 				mouseTrack.clear();
 				panel.setBackground(Color.WHITE);
+			} else if (command.equals("save")) {
+//					Rectangle r = new Rectangle(panel.getX(), panel.getY(), panel.getHeight(), panel.getWidth());
+//					ImageIO.write(new Robot().createScreenCapture(r), "png", drawingFile);
+				Point p = mouseTrack.getMousePos(); // allow resetting position after moving off-screen
+				mouseTrack.setMousePos(new Point(-1000, -1000)); // move off-screen
+				BufferedImage image = new BufferedImage(panel.getWidth(), panel.getHeight(),
+						BufferedImage.TYPE_INT_ARGB);
+				Graphics2D g2d = (Graphics2D) image.getGraphics();
+				panel.print(g2d);
+				mouseTrack.setMousePos(p); // move back to position
+				try {
+					ImageIO.write(image, "png", drawingFile);
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+
+				mouseTrack.setChanged(false);
+//				if (drawingFile == null) {
+//
+//				}
+			} else if (command.equals("exit")) {
+				if (mouseTrack.isChanged()) {
+					// TODO: call save method
+				}
+				System.exit(1);
 			}
 			System.out.println(command);
 		}
@@ -278,12 +327,13 @@ public class Art {
 
 	class OptionsMenuListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			if (e.getActionCommand().equals("brush")) {
+			String command = e.getActionCommand();
+			if (command.equals("brush")) {
 				System.out.println("brushType");
-			} else if (e.getActionCommand().equals("color")) {
+			} else if (command.equals("color")) {
 				Color c = JColorChooser.showDialog(panel, "Choose a color", null);
 				panel.setBrushColor(c);
-			} else if (e.getActionCommand().equals("bgcolor")) { // TODO: add a background color changer to the menu as
+			} else if (command.equals("bgcolor")) { // TODO: add a background color changer to the menu as
 				// well
 				Color bg = JColorChooser.showDialog(panel, "Choose a background color", null);
 				panel.setBackground(new Color(bg.getRGB()));
@@ -321,16 +371,17 @@ public class Art {
 		JTextField sizeInput;
 		JLabel sizePrompt;
 		JSlider slider;
-		int size = mouseTrack.getDiameter();
+		int size;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if (sizeFrame == null) {
 				KeyListener keyListener = new keyListener();
+				size = mouseTrack.getDiameter();
 				sizeFrame = new JFrame();
 				sizePanel = new JPanel();
-				sizeInput = new JTextField("" + size, 5);
-				slider = new JSlider(SwingConstants.HORIZONTAL, MouseMove.sizeMin, MouseMove.sizeMax / 2,
+				sizeInput = new JTextField("" + size, 5); // not displaying correct size
+				slider = new JSlider(SwingConstants.HORIZONTAL, MouseMove.sizeMin, MouseMove.sizeMax,
 						mouseTrack.getDiameter());
 				sizePrompt = new JLabel("Enter the size: ");
 
@@ -447,15 +498,18 @@ public class Art {
 					// in final
 		Color brushColor;
 		Color bgColor;
+
+		Point mousePos;
+
 		int x = 0;
 		int y = 300;
 
 		int circleWidth = 30;
 		int circleHeight = 30;
 
-		Point mousePos;
-
 		int mouseScroll;
+
+		boolean changed = false;
 
 		public void setBrushColor(Color c) {
 			brushColor = c;
@@ -497,6 +551,11 @@ public class Art {
 			Thread animate = new Thread() {
 				public void run() {
 					for (;;) {
+						if (mouseTrack.isChanged()) {
+							frame.setTitle("*" + drawingFile.getName());
+						} else {
+							frame.setTitle(drawingFile.getName());
+						}
 						try {
 							Thread.sleep(10); // REFRESH RATE: 10ms
 						} catch (InterruptedException e) {
@@ -660,7 +719,6 @@ public class Art {
 			 * new GradientPaint(x, y, Color.WHITE, x + 300, y + 100, c1); }
 			 * g2d.setPaint(paint);
 			 */
-
 			for (Mark m : markList) {
 				g2d.setColor(m.getColor());
 				g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
@@ -683,19 +741,21 @@ public class Art {
 	class MouseMove implements MouseMotionListener, MouseWheelListener, MouseListener {
 		Point mousePos;
 		final static int sizeMin = 2;
-		final static int sizeMax = 500;
+		final static int sizeMax = 300;
+		final int patterns = 4;
+
 		int scroll;
 		int diameter;
 		int colorPattern;
 
-		final int patternNumber = 4;
+		boolean changed;
 
 		public MouseMove() {
 			mousePos = new Point(-200, -200); // start offscreen
 			scroll = 0;
 			diameter = 30;
 			colorPattern = 1;
-
+			changed = false;
 			markList = new ArrayList<Mark>();
 
 //			pointList = new ArrayList<Point>();
@@ -704,6 +764,7 @@ public class Art {
 
 		public void addMark(MouseEvent e) {
 			markList.add(new Mark(e.getPoint(), new Dimension(diameter, diameter), panel.getBrushColor()));
+			changed = true;
 		}
 
 		@Override
@@ -723,6 +784,14 @@ public class Art {
 			// TODO: examine this line. (first drawn mark when dragged is not re-drawn when
 			// the mousePos changed when released)
 			mousePos = new Point(e.getX(), e.getY());
+		}
+
+		public void setMousePos(Point pos) {
+			mousePos = pos;
+		}
+
+		public Point getMousePos() {
+			return mousePos;
 		}
 
 		public int getMouseX() {
@@ -769,7 +838,7 @@ public class Art {
 		}
 
 		public void incrementColorPattern() {
-			if (colorPattern + 1 > patternNumber) {
+			if (colorPattern + 1 > patterns) {
 				colorPattern = 1;
 			} else {
 				colorPattern++;
@@ -782,6 +851,14 @@ public class Art {
 
 		public void clear() {
 			markList.removeAll(markList);
+		}
+
+		public boolean isChanged() {
+			return changed;
+		}
+
+		public void setChanged(boolean c) {
+			changed = c;
 		}
 
 		@Override
