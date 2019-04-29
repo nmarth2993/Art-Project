@@ -5,6 +5,11 @@
  * Drawing Application
  */
 
+//I could re-code some of this but keep most of the previous code to make it more clean.
+//Consider doing it, as it would be easier to work with.
+//Do save/save As soon! It should be somewhat simple (have a File reference in memory)
+//Opening images also shouldn’t be so bad I think.
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -903,13 +908,14 @@ public class Art {
 		@Override
 		public void mouseWheelMoved(MouseWheelEvent e) {
 			scroll = -(e.getWheelRotation());
-
+			System.out.println(diameter);
 			if (diameter + scroll < sizeMin) {
 				diameter = sizeMin;
+			} else if (diameter + scroll > sizeMax) {
+				diameter = sizeMax;
 			} else {
 				diameter += scroll;
 			}
-
 		}
 
 		public int getMouseScroll() {
@@ -923,8 +929,11 @@ public class Art {
 		public void setDiameter(int d) {
 			if (d < sizeMin) {
 				d = sizeMin;
+			} else if (d > sizeMax) {
+				d = sizeMax;
+			} else {
+				diameter = d;
 			}
-			diameter = d;
 		}
 
 		public int getDiameter() {
@@ -982,6 +991,5 @@ public class Art {
 		@Override
 		public void mouseReleased(MouseEvent e) {
 		}
-
 	}
 }
