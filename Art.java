@@ -70,6 +70,8 @@ may also be saved to an image file
 //4. Image handling (in/out)
 //5. More stuff (idk)
 
+//TODO: allow option to remove background image
+
 //TODO: Add text support that allows size, color choices
 
 //TODO: Add eraser:
@@ -78,7 +80,6 @@ may also be saved to an image file
 /*TODO: examine efficiency of repainting (avoid lag) look at the second reference
  * for low-latency painting (such as getting the bounds that have changed and only
  * re-draw that area)
- * 
  */
 
 //XXX: gradients/ maybe at the end if I have time
@@ -161,10 +162,6 @@ public class Art {
 	 */
 
 	public Art() {
-
-		// XXX: temporary hard-coding file for testing
-//		drawingFile = new File("C:/Users/nTandem/Desktop/ArtPictures/thing.png");
-		//
 		frame = new JFrame("Untitled");
 		mouseTrack = new MouseMove();
 		panel = new RainbowPanel();
@@ -184,7 +181,6 @@ public class Art {
 		frame.setJMenuBar(menubar);
 		frame.pack();
 		frame.setVisible(true);
-
 	}
 
 	private void createMenus() {
@@ -261,13 +257,8 @@ public class Art {
 		redo.addActionListener(editListener);
 		redo.setActionCommand("redo");
 
-//        aboutme.addActionListener(new AboutListener());
-//        exit.addActionListener(new ExitListener());
-//        for (int i = 0; i < file.getMenuComponentCount(); i++) {
-//        
-//        }
-
-		// create an array here that contains all of the objects... later
+		AboutListener aboutListener = new AboutListener();
+		aboutme.addActionListener(aboutListener);
 
 		file.add(newFile);
 		file.add(open);
@@ -289,25 +280,12 @@ public class Art {
 		menubar.add(options);
 		menubar.add(edit);
 		menubar.add(about);
-
-//        for (int i = 0; i < fileMenuItems.length; i++) {
-//            System.out.println(fileMenuItems[i]);
-//        }
-
-		/*
-		 * for (int i = 0; i < allMenuItems.length; i++) { for (int j = 0; j <
-		 * allMenuItems[i].length; j++) { try { allMenus[i].add(allMenuItems[i][j]); }
-		 * catch (Exception e) { e.printStackTrace(); } } }
-		 */
-
 	}
 
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				JFrame.setDefaultLookAndFeelDecorated(true);
-				new Art();
-			}
+		SwingUtilities.invokeLater(() -> {
+			JFrame.setDefaultLookAndFeelDecorated(true);
+			new Art();
 		});
 	}
 
@@ -379,7 +357,7 @@ public class Art {
 				panel.setBackground(Color.WHITE);
 				mouseTrack.setChanged(false);
 				drawingFile = null;
-
+				img = null;
 			}
 
 			else if (command.equals("open")) {
@@ -511,29 +489,26 @@ public class Art {
 
 	}
 
-	/*
-	 * class AboutListener implements ActionListener {
-	 *
-	 * JFrame frame; JPanel panel; JLabel label;
-	 *
-	 * @Override public void actionPerformed(ActionEvent e) {
-	 * System.out.println(e.getSource()); frame = new JFrame("About"); panel = new
-	 * JPanel(); label = new JLabel("This is some info"); panel.add(label);
-	 * frame.setContentPane(panel); frame.setPreferredSize(new Dimension(150, 150));
-	 * frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-	 * frame.setVisible(true); frame.pack();
-	 *
-	 * }
-	 *
-	 * }
-	 *
-	 * class ExitListener implements ActionListener {
-	 *
-	 * @Override public void actionPerformed(ActionEvent e) {
-	 * frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING)); }
-	 *
-	 * }
-	 */
+	class AboutListener implements ActionListener {
+
+		JFrame frame;
+		JPanel panel;
+		JLabel label;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			frame = new JFrame("About");
+			panel = new JPanel();
+			label = new JLabel("This is some info");
+			panel.add(label);
+			frame.setContentPane(panel);
+			frame.setPreferredSize(new Dimension(150, 150));
+			frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			frame.setVisible(true);
+			frame.pack();
+		}
+
+	}
 
 	class SizeListener implements ActionListener {
 		JFrame sizeFrame;
@@ -908,7 +883,6 @@ public class Art {
 		@Override
 		public void mouseWheelMoved(MouseWheelEvent e) {
 			scroll = -(e.getWheelRotation());
-			System.out.println(diameter);
 			if (diameter + scroll < sizeMin) {
 				diameter = sizeMin;
 			} else if (diameter + scroll > sizeMax) {
