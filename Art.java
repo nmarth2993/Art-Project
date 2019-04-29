@@ -1,8 +1,3 @@
-//I could re-code some of this but keep most of the previous code to make it more clean.
-//Consider doing it, as it would be easier to work with.
-//Do save/save As soon! It should be somewhat simple (have a File reference in memory)
-//Opening images also shouldn’t be so bad I think.
-
 /*
  * Nicholas Marthinuss
  * https://github.com/nmarth2993
@@ -19,6 +14,7 @@ import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /*
  *
@@ -60,6 +56,7 @@ may also be saved to an image file
 
 //XXX: REFERENCES TO LOOK INTO:
 //https://docs.oracle.com/javase/tutorial/2d/geometry/strokeandfill.html
+//https://pavelfatin.com/low-latency-painting-in-awt-and-swing/
 
 //TODO list (all of the comments from this line to the first line of code)
 //1. BrushStroke class
@@ -70,15 +67,22 @@ may also be saved to an image file
 
 //TODO: Add text support that allows size, color choices
 
-/*
-TODO: setting size:
-    pressing the menu item to set size will open a new panel with a textbox and a slider. the textbox and the slider
-    are linked (they both update with each other) a button at the bottom will submit the choice of the size.
-*/
 //TODO: Add eraser:
 //		arrayList of marks that are always the same color as the background
 
-//XXX: gradients maybe at the end if I have time
+/*TODO: examine efficiency of repainting (avoid lag) look at the second reference
+ * for low-latency painting (such as getting the bounds that have changed and only
+ * re-draw that area)
+ * 
+ */
+
+//XXX: gradients/ maybe at the end if I have time
+/*XXX: note that animation won't be saved, as png doesn't support it --> support different
+ * file types: 
+ * gif: +animation, -transparency
+ * png: +transparency, +higher quality, -no animation
+ * jpg: -----don't use jpg
+ */
 
 public class Art {
 	JFrame frame;
@@ -109,7 +113,12 @@ public class Art {
 
 	File drawingFile;
 
+	FileMenuListener fmListen;
+
 	ArrayList<Mark> markList;
+
+	// TODO: remove this, temporary
+	Image img;
 
 	/*
 	 * JMenuItem[] fileMenuItems; JMenuItem[] optionMenuItems; JMenuItem[]
@@ -149,12 +158,14 @@ public class Art {
 	public Art() {
 
 		// XXX: temporary hard-coding file for testing
-		drawingFile = new File("C:/Users/nTandem/Desktop/ArtPictures/thing.png");
+//		drawingFile = new File("C:/Users/nTandem/Desktop/ArtPictures/thing.png");
 		//
 		frame = new JFrame("Untitled");
 		mouseTrack = new MouseMove();
 		panel = new RainbowPanel();
 		sizeListener = new SizeListener();
+
+		frame.addWindowListener(new FrameListener());
 
 		createMenus();
 		panel.setBackground(Color.WHITE);
@@ -163,7 +174,7 @@ public class Art {
 		panel.addMouseListener(mouseTrack);
 
 		frame.setPreferredSize(new Dimension(500, 500));
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.setContentPane(panel);
 		frame.setJMenuBar(menubar);
 		frame.pack();
@@ -178,35 +189,47 @@ public class Art {
 		file.setMnemonic('f');
 		newFile = new JMenuItem("New");
 		newFile.setAccelerator(KeyStroke.getKeyStroke("ctrl N"));
+		newFile.setMnemonic('n');
 		open = new JMenuItem("Open");
 		open.setAccelerator(KeyStroke.getKeyStroke("ctrl O"));
+		open.setMnemonic('o');
 		save = new JMenuItem("Save");
 		save.setAccelerator(KeyStroke.getKeyStroke("ctrl S"));
+		save.setMnemonic('s');
 		saveAs = new JMenuItem("Save As...");
+		saveAs.setMnemonic('a');
 		exit = new JMenuItem("Exit");
 		exit.setAccelerator(KeyStroke.getKeyStroke("ctrl Q"));
+		exit.setMnemonic('x');
 
 		options = new JMenu("Options");
 		options.setMnemonic('o');
 		size = new JMenuItem("Size");
+		size.setMnemonic('s');
 		brushType = new JMenuItem("Brush type");
+		brushType.setMnemonic('b');
 		color = new JMenuItem("Brush color");
+		color.setMnemonic('c');
 		bgColor = new JMenuItem("Background color");
+		bgColor.setMnemonic('g');
 
 		edit = new JMenu("Edit");
 		edit.setMnemonic('e');
 		undo = new JMenuItem("Undo");
 		undo.setAccelerator(KeyStroke.getKeyStroke("ctrl Z"));
+		undo.setMnemonic('u');
 		redo = new JMenuItem("Redo");
 		redo.setAccelerator(KeyStroke.getKeyStroke("ctrl Y"));
+		redo.setMnemonic('r');
 
 		about = new JMenu("About");
 		about.setMnemonic('a');
 		aboutme = new JMenuItem("About");
+		aboutme.setMnemonic('a');
 
 		// TODO: using one actionListener for each menu like below
 
-		FileMenuListener fmListen = new FileMenuListener();
+		fmListen = new FileMenuListener(); // making this listener class var to allowing saving for all subclasses
 		newFile.addActionListener(fmListen);
 		newFile.setActionCommand("new");
 		open.addActionListener(fmListen);
@@ -226,6 +249,12 @@ public class Art {
 		color.setActionCommand("color");
 		bgColor.addActionListener(optionListen);
 		bgColor.setActionCommand("bgcolor");
+
+		EditMenuListener editListener = new EditMenuListener();
+		undo.addActionListener(editListener);
+		undo.setActionCommand("undo");
+		redo.addActionListener(editListener);
+		redo.setActionCommand("redo");
 
 //        aboutme.addActionListener(new AboutListener());
 //        exit.addActionListener(new ExitListener());
@@ -280,6 +309,51 @@ public class Art {
 	// TODO: examing having one action listener for all or each one separate or one
 	// to handle certain groups that are similar (save/save as)
 
+	class FrameListener implements WindowListener {
+
+		@Override
+		public void windowActivated(WindowEvent arg0) {
+		}
+
+		@Override
+		public void windowClosed(WindowEvent arg0) {
+		}
+
+		@Override
+		public void windowClosing(WindowEvent arg0) {
+			if (mouseTrack.isChanged()) {
+				int choice = fmListen.promptSave();
+				if (choice == 0) {
+					fmListen.save();
+				} else if (choice == 1) {
+
+				} else {
+					return;
+				}
+			} else {
+				System.exit(1);
+			}
+			System.exit(1);
+		}
+
+		@Override
+		public void windowDeactivated(WindowEvent arg0) {
+		}
+
+		@Override
+		public void windowDeiconified(WindowEvent arg0) {
+		}
+
+		@Override
+		public void windowIconified(WindowEvent arg0) {
+		}
+
+		@Override
+		public void windowOpened(WindowEvent arg0) {
+		}
+
+	}
+
 	class FileMenuListener implements ActionListener {
 
 		@Override
@@ -287,40 +361,117 @@ public class Art {
 			String command = e.getActionCommand();
 			if (command.equals("new")) {
 				if (mouseTrack.isChanged()) {
-					System.out.println("saving...");
-					System.out.println("cleared *");
-					mouseTrack.setChanged(false);
+					int choice = promptSave();
+					if (choice == 0) {
+						save();
+					} else if (choice == 1) {
+						// do nothing, but run the code at the end
+					} else {
+						return;
+					}
 				}
 				mouseTrack.clear();
 				panel.setBackground(Color.WHITE);
-			} else if (command.equals("save")) {
-//					Rectangle r = new Rectangle(panel.getX(), panel.getY(), panel.getHeight(), panel.getWidth());
-//					ImageIO.write(new Robot().createScreenCapture(r), "png", drawingFile);
-				Point p = mouseTrack.getMousePos(); // allow resetting position after moving off-screen
-				mouseTrack.setMousePos(new Point(-1000, -1000)); // move off-screen
-				BufferedImage image = new BufferedImage(panel.getWidth(), panel.getHeight(),
-						BufferedImage.TYPE_INT_ARGB);
-				Graphics2D g2d = (Graphics2D) image.getGraphics();
-				panel.print(g2d);
-				mouseTrack.setMousePos(p); // move back to position
+				mouseTrack.setChanged(false);
+				drawingFile = null;
+
+			}
+
+			else if (command.equals("open")) {
+				// TODO: finish this action:
+
+				JFileChooser fileChooser = new JFileChooser();
+				fileChooser.setCurrentDirectory(new File("C:/Users/" + System.getProperty("user.name") + "/Desktop"));
+				FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", "jpg", "jpeg", "png", "gif",
+						"wbmp", "bmp", "tif", "tiff");
+				fileChooser.setFileFilter(filter);
+				fileChooser.showOpenDialog(frame);
 				try {
-					ImageIO.write(image, "png", drawingFile);
+					img = ImageIO.read(fileChooser.getSelectedFile());
+
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+			}
 
-				mouseTrack.setChanged(false);
-//				if (drawingFile == null) {
-//
-//				}
+			else if (command.equals("save")) {
+				// XXX: the next line is for testing, remove in later versions:
+				save();
+
+			} else if (command.equals("saveAs")) {
+				selectFile();
+				if (drawingFile != null) {
+					save();
+				}
+
 			} else if (command.equals("exit")) {
 				if (mouseTrack.isChanged()) {
-					// TODO: call save method
+					int choice = promptSave();
+					if (choice == 0) {
+						save();
+					} else if (choice == 1) {
+
+					} else {
+						return;
+					}
 				}
 				System.exit(1);
 			}
-			System.out.println(command);
+		}
+
+		public int promptSave() {
+			Object[] options = { "Yes", "No", "Cancel" };
+			int choice = JOptionPane.showOptionDialog((Component) frame, (Object) "Do you want to save?",
+					"Unsaved work will be lost", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null,
+					options, options[0]);
+			return choice;
+		}
+
+		public void selectFile() {
+			JFileChooser fileChooser = new JFileChooser();
+			// XXX: using ArtPictures for now to organize, may change in final release (or
+			// create that dir)
+			fileChooser.setCurrentDirectory(
+					new File("C:/Users/" + System.getProperty("user.name") + "/Desktop/ArtPictures"));
+			FileNameExtensionFilter filter = new FileNameExtensionFilter("PNG files", "png");
+			fileChooser.setFileFilter(filter);
+			int choice = fileChooser.showSaveDialog(frame);
+
+			if (choice == JFileChooser.APPROVE_OPTION) {
+				File f = fileChooser.getSelectedFile();
+				if (!f.getPath().endsWith(".png")) {
+					drawingFile = new File(f.getPath() + ".png");
+				}
+			} else {
+				// cancel or window closed: (or error, but we will assume no errors)
+			}
+			// XXX: file may still be null at this point
+		}
+
+		public void save() {
+			if (drawingFile == null) {
+				selectFile();
+				if (drawingFile == null) {
+					return;
+				}
+			}
+
+			Point p = mouseTrack.getMousePos(); // allow resetting position after moving off-screen
+			mouseTrack.setMousePos(new Point(-1000, -1000)); // move off-screen
+			BufferedImage image = new BufferedImage(panel.getWidth(), panel.getHeight(),
+					BufferedImage.TYPE_INT_ARGB_PRE);
+			Graphics2D g2d = (Graphics2D) image.getGraphics();
+			panel.print(g2d);
+			mouseTrack.setMousePos(p); // move back to position
+
+			try {
+				ImageIO.write(image, "png", drawingFile);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+
+			mouseTrack.setChanged(false);
 		}
 
 	}
@@ -333,12 +484,26 @@ public class Art {
 			} else if (command.equals("color")) {
 				Color c = JColorChooser.showDialog(panel, "Choose a color", null);
 				panel.setBrushColor(c);
-			} else if (command.equals("bgcolor")) { // TODO: add a background color changer to the menu as
-				// well
+			} else if (command.equals("bgcolor")) { // TODO: add a background color changer to the menu!
 				Color bg = JColorChooser.showDialog(panel, "Choose a background color", null);
 				panel.setBackground(new Color(bg.getRGB()));
 			}
 		}
+	}
+
+	class EditMenuListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String command = e.getActionCommand();
+			if (command.equals("undo")) {
+
+			} else if (command.equals("redo")) {
+
+			}
+			System.out.println(command);
+		}
+
 	}
 
 	/*
@@ -427,7 +592,6 @@ public class Art {
 //					System.out.println("(" + sizeFrame.getPreferredSize().getWidth() + ", "
 //							+ sizeFrame.getPreferredSize().getHeight() + ")");
 					sizeFrame = null;
-					System.out.println(size);
 				}
 
 			}
@@ -522,7 +686,7 @@ public class Art {
 		public RainbowPanel() {
 			mousePos = new Point(0, 0);
 			mouseScroll = 0;
-			RGBColor();
+//			RGBColor();
 			animate();
 			mouseWheel();
 			brushColor = new Color(0, 0, 0);
@@ -530,31 +694,37 @@ public class Art {
 //            diag();
 		}
 
-		public void diag() {
-			new Thread() {
-				public void run() {
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					for (;;) {
-						System.out.println("cWidth: " + circleWidth);
-						System.out.println("diameter: " + mouseTrack.getDiameter());
-						System.out.println("userSize: " + sizeListener.getUserSize());
-					}
-				}
-			}.start();
-		}
+//		public void diag() {
+//			new Thread() {
+//				public void run() {
+//					try {
+//						Thread.sleep(10);
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
+//					for (;;) {
+//						System.out.println("cWidth: " + circleWidth);
+//						System.out.println("diameter: " + mouseTrack.getDiameter());
+//						System.out.println("userSize: " + sizeListener.getUserSize());
+//					}
+//				}
+//			}.start();
+//		}
 
 		public void animate() {
 			Thread animate = new Thread() {
 				public void run() {
 					for (;;) {
-						if (mouseTrack.isChanged()) {
-							frame.setTitle("*" + drawingFile.getName());
+						String fileName;
+						if (drawingFile == null) {
+							fileName = "Untitled";
 						} else {
-							frame.setTitle(drawingFile.getName());
+							fileName = drawingFile.getName();
+						}
+						if (mouseTrack.isChanged()) {
+							frame.setTitle("*" + fileName);
+						} else {
+							frame.setTitle(fileName);
 						}
 						try {
 							Thread.sleep(10); // REFRESH RATE: 10ms
@@ -591,122 +761,46 @@ public class Art {
 			mouseWheel.start();
 		}
 
-		public void gradient() {
-			Thread gradient = new Thread() {
-				public void run() {
-					for (;;) {
-						for (int i = 0; i < 200; i++) {
-							x++;
-							y--;
-							try {
-								Thread.sleep(sleepVal);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-						for (int i = 0; i < 200; i++) {
-							x++;
-							y++;
-							try {
-								Thread.sleep(sleepVal);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-						for (int i = 0; i < 200; i++) {
-							x--;
-							y++;
-							try {
-								Thread.sleep(sleepVal);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-						for (int i = 0; i < 200; i++) {
-							x--;
-							y--;
-							try {
-								Thread.sleep(sleepVal);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-					}
-				}
-
-			};
-			gradient.start();
-		}
-
-		public void RGBColor() {
-			new Thread() {
-				public void run() {
-					int red = 255;
-					int blue = 0;
-					int green = 0;
-					for (;;) {
-						for (int i = 0; i < 255; i++) {
-							green++;
-							c1 = new Color(red, green, blue);
-							try {
-								Thread.sleep(sleepVal);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-						for (int i = 0; i < 255; i++) {
-							red--;
-							c1 = new Color(red, green, blue);
-							try {
-								Thread.sleep(sleepVal);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-						for (int i = 0; i < 255; i++) {
-							blue++;
-							c1 = new Color(red, green, blue);
-							try {
-								Thread.sleep(sleepVal);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-						for (int i = 0; i < 255; i++) {
-							green--;
-							c1 = new Color(red, green, blue);
-							try {
-								Thread.sleep(sleepVal);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-						for (int i = 0; i < 255; i++) {
-							red++;
-							c1 = new Color(red, green, blue);
-							try {
-								Thread.sleep(sleepVal);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-						for (int i = 0; i < 255; i++) {
-							blue--;
-							c1 = new Color(red, green, blue);
-							try {
-								Thread.sleep(sleepVal);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-						}
-					}
-				}
-			}.start();
-		}
+		/*
+		 * public void gradient() { Thread gradient = new Thread() { public void run() {
+		 * for (;;) { for (int i = 0; i < 200; i++) { x++; y--; try {
+		 * Thread.sleep(sleepVal); } catch (InterruptedException e) {
+		 * e.printStackTrace(); } } for (int i = 0; i < 200; i++) { x++; y++; try {
+		 * Thread.sleep(sleepVal); } catch (InterruptedException e) {
+		 * e.printStackTrace(); } } for (int i = 0; i < 200; i++) { x--; y++; try {
+		 * Thread.sleep(sleepVal); } catch (InterruptedException e) {
+		 * e.printStackTrace(); } } for (int i = 0; i < 200; i++) { x--; y--; try {
+		 * Thread.sleep(sleepVal); } catch (InterruptedException e) {
+		 * e.printStackTrace(); } } } }
+		 * 
+		 * }; gradient.start(); }
+		 * 
+		 * public void RGBColor() { new Thread() { public void run() { int red = 255;
+		 * int blue = 0; int green = 0; for (;;) { for (int i = 0; i < 255; i++) {
+		 * green++; c1 = new Color(red, green, blue); try { Thread.sleep(sleepVal); }
+		 * catch (InterruptedException e) { e.printStackTrace(); } } for (int i = 0; i <
+		 * 255; i++) { red--; c1 = new Color(red, green, blue); try {
+		 * Thread.sleep(sleepVal); } catch (InterruptedException e) {
+		 * e.printStackTrace(); } } for (int i = 0; i < 255; i++) { blue++; c1 = new
+		 * Color(red, green, blue); try { Thread.sleep(sleepVal); } catch
+		 * (InterruptedException e) { e.printStackTrace(); } } for (int i = 0; i < 255;
+		 * i++) { green--; c1 = new Color(red, green, blue); try {
+		 * Thread.sleep(sleepVal); } catch (InterruptedException e) {
+		 * e.printStackTrace(); } } for (int i = 0; i < 255; i++) { red++; c1 = new
+		 * Color(red, green, blue); try { Thread.sleep(sleepVal); } catch
+		 * (InterruptedException e) { e.printStackTrace(); } } for (int i = 0; i < 255;
+		 * i++) { blue--; c1 = new Color(red, green, blue); try {
+		 * Thread.sleep(sleepVal); } catch (InterruptedException e) {
+		 * e.printStackTrace(); } } } } }.start(); }
+		 */
 
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			Graphics2D g2d = (Graphics2D) g;
+			if (img != null) {
+				g2d.drawImage(img, 0, 0, panel.getWidth(), panel.getHeight(), 0, 0, img.getWidth(null),
+						img.getHeight(null), panel);
+			}
 
 //			 below is the gradient code, removed due to performance issues
 
