@@ -362,16 +362,21 @@ public class Art {
 
 			else if (command.equals("open")) {
 				// TODO: finish this action:
-
+				
 				JFileChooser fileChooser = new JFileChooser();
 				fileChooser.setCurrentDirectory(new File("C:/Users/" + System.getProperty("user.name") + "/Desktop"));
 				FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", "jpg", "jpeg", "png", "gif",
 						"wbmp", "bmp", "tif", "tiff");
 				fileChooser.setFileFilter(filter);
 				fileChooser.showOpenDialog(frame);
+				if(mouseTrack.isChanged()) {
+					actionPerformed(new ActionEvent(this, 99, "new"));
+				
+				}
 				try {
-					img = ImageIO.read(fileChooser.getSelectedFile());
-
+					File f = fileChooser.getSelectedFile();
+					img = ImageIO.read(f);
+					drawingFile = f;
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -648,10 +653,9 @@ public class Art {
 		int x = 0;
 		int y = 300;
 
-		int circleWidth = 30;
-		int circleHeight = 30;
+		int diameter;
 
-		int mouseScroll;
+//		int mouseScroll;
 
 		boolean changed = false;
 
@@ -665,10 +669,9 @@ public class Art {
 
 		public RainbowPanel() {
 			mousePos = new Point(0, 0);
-			mouseScroll = 0;
 //			RGBColor();
 			animate();
-			mouseWheel();
+//			mouseWheel();
 			brushColor = new Color(0, 0, 0);
 //			gradient();
 //            diag();
@@ -717,28 +720,6 @@ public class Art {
 				}
 			};
 			animate.start();
-		}
-
-		public void mouseWheel() { // XXX: Added thread names for profiling
-			Thread mouseWheel = new Thread() {
-				public void run() {
-					for (;;) {
-						mouseScroll = mouseTrack.getMouseScroll();
-//                        System.out.println(mouseScroll);
-						if (mouseScroll != 0) {
-							if (circleWidth - mouseScroll < 3) {
-								circleWidth = 3;
-							} else if (circleWidth + mouseScroll > 100) {
-								circleWidth = 100;
-							} else {
-								circleWidth += mouseScroll;
-							}
-							circleHeight = circleWidth;
-						}
-					}
-				}
-			};
-			mouseWheel.start();
 		}
 
 		/*
@@ -798,12 +779,12 @@ public class Art {
 				g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
 						m.getHeight());
 			}
-
-			circleWidth = mouseTrack.getDiameter();
-			circleHeight = circleWidth;
+			diameter = mouseTrack.getDiameter();
+			diameter = mouseTrack.getDiameter();
+			//
 			g2d.setColor(brushColor);
-			g2d.fillOval((int) mouseTrack.getMouseX() - (circleWidth / 2),
-					(int) mouseTrack.getMouseY() - (circleHeight / 2), circleWidth, circleHeight);
+			g2d.fillOval((int) mouseTrack.getMouseX() - (diameter / 2),
+					(int) mouseTrack.getMouseY() - (diameter / 2), diameter, diameter);
 		}
 	}
 
@@ -967,3 +948,4 @@ public class Art {
 		}
 	}
 }
+
