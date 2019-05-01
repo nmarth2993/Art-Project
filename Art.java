@@ -8,7 +8,7 @@
 //I could re-code some of this but keep most of the previous code to make it more clean.
 //Consider doing it, as it would be easier to work with.
 //Do save/save As soon! It should be somewhat simple (have a File reference in memory)
-//Opening images also shouldn’t be so bad I think.
+//Opening images also shouldnâ€™t be so bad I think.
 
 import java.awt.*;
 import java.awt.event.*;
@@ -76,6 +76,7 @@ may also be saved to an image file
 
 //TODO: Add eraser:
 //		arrayList of marks that are always the same color as the background
+//TODO: add 'pencil' tool --> creates lines that connect point to point (polyLine)
 
 /*TODO: examine efficiency of repainting (avoid lag) look at the second reference
  * for low-latency painting (such as getting the bounds that have changed and only
@@ -282,9 +283,15 @@ public class Art {
 		menubar.add(about);
 	}
 
+	// XXX: Main:
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
-			JFrame.setDefaultLookAndFeelDecorated(true);
+			try {
+				UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+					| UnsupportedLookAndFeelException ex) {
+				ex.printStackTrace();
+			}
 			new Art();
 		});
 	}
@@ -362,25 +369,30 @@ public class Art {
 
 			else if (command.equals("open")) {
 				// TODO: finish this action:
-				
+
 				JFileChooser fileChooser = new JFileChooser();
 				fileChooser.setCurrentDirectory(new File("C:/Users/" + System.getProperty("user.name") + "/Desktop"));
 				FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", "jpg", "jpeg", "png", "gif",
 						"wbmp", "bmp", "tif", "tiff");
 				fileChooser.setFileFilter(filter);
 				fileChooser.showOpenDialog(frame);
-				if(mouseTrack.isChanged()) {
-					actionPerformed(new ActionEvent(this, 99, "new"));
-				
+				if (mouseTrack.isChanged()) {
+					actionPerformed(new ActionEvent(this, 99, "new")); // meh
 				}
 				try {
 					File f = fileChooser.getSelectedFile();
-					img = ImageIO.read(f);
-					drawingFile = f;
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+//					if (f != null) {
+					try {
+						img = ImageIO.read(f);
+						drawingFile = fileChooser.getSelectedFile();
+					} catch (NullPointerException e1) {
+						e1.printStackTrace();
+					}
+//					}
+				} catch (IOException | NullPointerException e2) {
+					System.out.println("Error opening file");
 				}
+				mouseTrack.clear();
 			}
 
 			else if (command.equals("save")) {
@@ -550,8 +562,7 @@ public class Art {
 				sizeFrame.setContentPane(sizePanel);
 
 				sizeFrame.setLocation(10, 10);
-
-				sizeFrame.setPreferredSize(new Dimension(200, 100));
+				sizeFrame.setPreferredSize(new Dimension(220, 100));
 				sizeFrame.pack();
 				sizeFrame.setVisible(true);
 //				System.out.println(sizeFrame.getHeight());
@@ -653,7 +664,7 @@ public class Art {
 		int x = 0;
 		int y = 300;
 
-		int diameter;
+		int diameter; // TODO: phase this out later
 
 //		int mouseScroll;
 
@@ -783,8 +794,8 @@ public class Art {
 			diameter = mouseTrack.getDiameter();
 			//
 			g2d.setColor(brushColor);
-			g2d.fillOval((int) mouseTrack.getMouseX() - (diameter / 2),
-					(int) mouseTrack.getMouseY() - (diameter / 2), diameter, diameter);
+			g2d.fillOval((int) mouseTrack.getMouseX() - (diameter / 2), (int) mouseTrack.getMouseY() - (diameter / 2),
+					diameter, diameter);
 		}
 	}
 
@@ -800,7 +811,8 @@ public class Art {
 		final int patterns = 4;
 
 		int scroll;
-		int diameter;
+		int diameter; // change to size and then add shapes with length/width ratios: circle is 1:1,
+						// oval 2:1/1:2
 		int colorPattern;
 
 		boolean changed;
@@ -948,4 +960,3 @@ public class Art {
 		}
 	}
 }
-
