@@ -4,6 +4,7 @@ public class Mark {
 	private Point point;
 	private Color color;
 	private Dimension size;
+	private Shape brush;
 
 	public Point getPoint() {
 		return point;
@@ -43,5 +44,13 @@ public class Mark {
 		point = new Point(x, y);
 		size = new Dimension(width, height);
 		color = c;
+	}
+	
+	public Shape getShape() {
+		return brush;
+	}
+	
+	public void setShape(Shape s) {
+		brush = s;
 	}
 }
