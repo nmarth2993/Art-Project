@@ -8,7 +8,7 @@
 //I could re-code some of this but keep most of the previous code to make it more clean.
 //Consider doing it, as it would be easier to work with.
 //Do save/save As soon! It should be somewhat simple (have a File reference in memory)
-//Opening images also shouldnâ€™t be so bad I think.
+//Opening images also shouldn't be so bad I think.
 
 import java.awt.*;
 import java.awt.event.*;
