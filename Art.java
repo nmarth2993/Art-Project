@@ -8,7 +8,7 @@
 //I could re-code some of this but keep most of the previous code to make it more clean.
 //Consider doing it, as it would be easier to work with.
 //Do save/save As soon! It should be somewhat simple (have a File reference in memory)
-//Opening images also shouldn't be so bad I think.
+//Opening images also shouldnâ€™t be so bad I think.
 
 import java.awt.*;
 import java.awt.event.*;
@@ -499,9 +499,14 @@ public class Art {
 		public void actionPerformed(ActionEvent e) {
 			String command = e.getActionCommand();
 			if (command.equals("undo")) {
-
+				if (strokeList.size() != 0) {
+					editList.add(strokeList.remove(strokeList.size() - 1));
+				}
+				System.out.println(":");
 			} else if (command.equals("redo")) {
-
+				if (editList.size() != 0) {
+					strokeList.add(editList.remove(editList.size() - 1));
+				}
 			}
 			System.out.println(command);
 		}
@@ -687,6 +692,8 @@ public class Art {
 			animate();
 //			mouseWheel();
 			brushColor = new Color(0, 0, 0);
+			strokeList = new ArrayList<BrushStroke>();
+			editList = new ArrayList<BrushStroke>();
 //			gradient();
 //            diag();
 
@@ -812,10 +819,12 @@ public class Art {
 			 * new GradientPaint(x, y, Color.WHITE, x + 300, y + 100, c1); }
 			 * g2d.setPaint(paint);
 			 */
-			for (Mark m : markList) {
-				g2d.setColor(m.getColor());
-				g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
-						m.getHeight());
+			for (BrushStroke b : strokeList) {
+				for (Mark m : b.getMarks()) {
+					g2d.setColor(m.getColor());
+					g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
+							m.getHeight());
+				}
 			}
 			diameter = mouseTrack.getDiameter();
 			diameter = mouseTrack.getDiameter();
@@ -896,7 +905,7 @@ public class Art {
 			return (int) mousePos.getY();
 		}
 
-		public ArrayList<Mark> getMarkList() {
+		public ArrayList<Mark> getMarkList() { // TODO: update the mouseListener to add brushstrokes
 			return markList;
 		}
 
