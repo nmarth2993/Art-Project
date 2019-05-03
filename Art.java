@@ -485,10 +485,14 @@ public class Art {
 				System.out.println("brushType");
 			} else if (command.equals("color")) {
 				Color c = JColorChooser.showDialog(panel, "Choose a color", null);
-				panel.setBrushColor(c);
+				if (c != null) {
+					panel.setBrushColor(c);
+				}
 			} else if (command.equals("bgcolor")) { // TODO: add a background color changer to the menu!
 				Color bg = JColorChooser.showDialog(panel, "Choose a background color", null);
-				panel.setBackground(new Color(bg.getRGB()));
+				if (bg != null) {
+					panel.setBackground(new Color(bg.getRGB()));
+				}
 			}
 		}
 	}
@@ -499,14 +503,9 @@ public class Art {
 		public void actionPerformed(ActionEvent e) {
 			String command = e.getActionCommand();
 			if (command.equals("undo")) {
-				if (strokeList.size() != 0) {
-					editList.add(strokeList.remove(strokeList.size() - 1));
-				}
-				System.out.println(":");
+
 			} else if (command.equals("redo")) {
-				if (editList.size() != 0) {
-					strokeList.add(editList.remove(editList.size() - 1));
-				}
+
 			}
 			System.out.println(command);
 		}
@@ -671,8 +670,7 @@ public class Art {
 		int x = 0;
 		int y = 300;
 
-		int diameter; // TODO: phase this out later (make a size variable): each shape will have a
-						// length and width, and multiply length * size and width * size to scale it
+		int diameter; // TODO: phase this out later
 
 //		int mouseScroll;
 
@@ -692,8 +690,6 @@ public class Art {
 			animate();
 //			mouseWheel();
 			brushColor = new Color(0, 0, 0);
-			strokeList = new ArrayList<BrushStroke>();
-			editList = new ArrayList<BrushStroke>();
 //			gradient();
 //            diag();
 
@@ -819,16 +815,13 @@ public class Art {
 			 * new GradientPaint(x, y, Color.WHITE, x + 300, y + 100, c1); }
 			 * g2d.setPaint(paint);
 			 */
-			for (BrushStroke b : strokeList) {
-				for (Mark m : b.getMarks()) {
-					g2d.setColor(m.getColor());
-					g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
-							m.getHeight());
-				}
+			for (Mark m : markList) {
+				g2d.setColor(m.getColor());
+				g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
+						m.getHeight());
 			}
 			diameter = mouseTrack.getDiameter();
 			diameter = mouseTrack.getDiameter();
-			//
 			g2d.setColor(brushColor);
 			g2d.fillOval((int) mouseTrack.getMouseX() - (diameter / 2), (int) mouseTrack.getMouseY() - (diameter / 2),
 					diameter, diameter);
@@ -905,7 +898,7 @@ public class Art {
 			return (int) mousePos.getY();
 		}
 
-		public ArrayList<Mark> getMarkList() { // TODO: update the mouseListener to add brushstrokes
+		public ArrayList<Mark> getMarkList() {
 			return markList;
 		}
 
