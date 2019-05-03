@@ -383,14 +383,14 @@ public class Art {
 				}
 				try {
 					File f = fileChooser.getSelectedFile();
-//					if (f != null) {
-					try {
-						img = ImageIO.read(f);
-						drawingFile = fileChooser.getSelectedFile();
-					} catch (NullPointerException e1) {
-						e1.printStackTrace();
+					if (f != null) {
+						try {
+							img = ImageIO.read(f);
+							drawingFile = fileChooser.getSelectedFile();
+						} catch (NullPointerException e1) {
+							e1.printStackTrace();
+						}
 					}
-//					}
 				} catch (IOException | NullPointerException e2) {
 					System.out.println("Error opening file");
 				}
@@ -666,10 +666,8 @@ public class Art {
 		int x = 0;
 		int y = 300;
 
-		int yeet1 = 0;
-		double yeet2 = 0;
-
-		int diameter; // TODO: phase this out later
+		int diameter; // TODO: phase this out later (make a size variable): each shape will have a
+						// length and width, and multiply length * size and width * size to scale it
 
 //		int mouseScroll;
 
@@ -692,7 +690,7 @@ public class Art {
 //			gradient();
 //            diag();
 
-			yeet();
+//			yeet();
 		}
 
 //		public void diag() {
@@ -712,26 +710,26 @@ public class Art {
 //			}.start();
 //		}
 
-		public void yeet() {
-			new Thread() {
-				public void run() {
-					double angle = 0;
-					for (;;) {
+//		public void yeet() {
+//			new Thread() {
+//				public void run() {
+//					double angle = 0;
+//					for (;;) {
 //						System.out.println("tan(" + Math.toDegrees(angle) + "):");
-						System.out.println(Math.tan(angle));
-						System.out.println((int) Math.tan(angle));
-						yeet2 = (int) Math.round(Math.tan(angle));
-						angle += Math.toRadians(1);
-						try {
-							Thread.sleep(10);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-				}
-			}.start();
-		}
+//						System.out.println(Math.tan(angle));
+//						System.out.println((int) Math.tan(angle));
+//						yeet2 = (int) Math.round(Math.tan(angle));
+//						angle += Math.toRadians(1);
+//						try {
+//							Thread.sleep(10);
+//						} catch (InterruptedException e) {
+//							// TODO Auto-generated catch block
+//							e.printStackTrace();
+//						}
+//					}
+//				}
+//			}.start();
+//		}
 
 		public void animate() {
 			Thread animate = new Thread() {
@@ -815,15 +813,14 @@ public class Art {
 			 * g2d.setPaint(paint);
 			 */
 			for (Mark m : markList) {
-//				g2d.setColor(m.getColor()); //XXX: revert this line
-				g2d.setPaint(new GradientPaint(0, 0, m.getColor(), 1, (float) yeet2, Color.BLACK, true));
+				g2d.setColor(m.getColor());
 				g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
 						m.getHeight());
 			}
 			diameter = mouseTrack.getDiameter();
 			diameter = mouseTrack.getDiameter();
 			//
-//			g2d.setColor(brushColor); //XXX: revert this line
+			g2d.setColor(brushColor);
 			g2d.fillOval((int) mouseTrack.getMouseX() - (diameter / 2), (int) mouseTrack.getMouseY() - (diameter / 2),
 					diameter, diameter);
 		}
