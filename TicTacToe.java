@@ -28,7 +28,7 @@ public class TicTacToe {
 		m = new Mouse();
 		panel.addMouseListener(m);
 
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.setContentPane(panel);
 		frame.setPreferredSize(new Dimension(400, 400));
 		frame.setVisible(true);
