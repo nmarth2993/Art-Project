@@ -38,13 +38,11 @@ may also be saved to an image file
 //https://pavelfatin.com/low-latency-painting-in-awt-and-swing/
 
 //TODO list (all of the comments from this line to the first line of code)
-//1. BrushStroke class
-//2. Different brush shapes
-//3. insert shapes
-//4. Image handling (in/out)
-//5. More stuff (idk)
-
-//TODO: allow option to remove background image
+//1. BrushStroke class - DONE
+//2. Different brush shapes - DONE
+//3. insert shapes - DONE
+//4. Image handling (in/out) - DONE
+//5. More stuff (idk) - ambiguous
 
 //TODO: Add text support that allows size, color choices
 
@@ -57,7 +55,7 @@ may also be saved to an image file
  * re-draw that area)
  */
 
-//XXX: gradients/ maybe at the end if I have time
+//XXX: gradients maybe at the end if I have time
 /*XXX: note that animation won't be saved, as png doesn't support it --> support different
  * file types: 
  * gif: +animation, -transparency
@@ -70,6 +68,7 @@ public class Art {
 	RainbowPanel panel;
 	MouseMove mouseTrack;
 	SizeListener sizeListener;
+
 	JMenuBar menubar;
 
 	JMenu file;
@@ -79,11 +78,18 @@ public class Art {
 	JMenuItem saveAs;
 	JMenuItem exit;
 
+	// @formatter:off
+	
 	JMenu options;
 	JMenuItem size;
-	JMenuItem brushType;
+	JMenu brushSelect;
+		JMenuItem circleBrush;
+		JMenuItem squareBrush;
+		JMenuItem triangleBrush;
 	JMenuItem color;
 	JMenuItem bgColor;
+
+	// @formatter:on
 
 	JMenu edit;
 	JMenuItem undo;
@@ -99,6 +105,8 @@ public class Art {
 	ArrayList<Mark> markList;
 	ArrayList<BrushStroke> strokeList;
 	ArrayList<BrushStroke> editList;
+
+	int brushType;
 
 	Image img;
 
@@ -138,6 +146,7 @@ public class Art {
 	 */
 
 	public Art() {
+		brushType = Mark.CIRCLE_BRUSH;
 		frame = new JFrame("Untitled");
 		mouseTrack = new MouseMove();
 		panel = new RainbowPanel();
@@ -183,8 +192,16 @@ public class Art {
 		options.setMnemonic('o');
 		size = new JMenuItem("Size");
 		size.setMnemonic('s');
-		brushType = new JMenuItem("Brush type");
-		brushType.setMnemonic('b');
+
+		brushSelect = new JMenu("Brush type");
+		brushSelect.setMnemonic('b');
+		circleBrush = new JMenuItem("Circle brush");
+		circleBrush.setMnemonic('c');
+		squareBrush = new JMenuItem("Square brush");
+		squareBrush.setMnemonic('s');
+		triangleBrush = new JMenuItem("Triangle brush");
+		triangleBrush.setMnemonic('t');
+
 		color = new JMenuItem("Brush color");
 		color.setMnemonic('c');
 		bgColor = new JMenuItem("Background color");
@@ -202,9 +219,7 @@ public class Art {
 		game = new JMenu("Game");
 		playGame = new JMenuItem("Play Game");
 
-		// TODO: using one actionListener for each menu like below
-
-		fmListen = new FileMenuListener(); // making this listener class var to allowing saving for all subclasses
+		fmListen = new FileMenuListener();
 		newFile.addActionListener(fmListen);
 		newFile.setActionCommand("new");
 		open.addActionListener(fmListen);
@@ -218,12 +233,18 @@ public class Art {
 
 		OptionsMenuListener optionListen = new OptionsMenuListener();
 		size.addActionListener(sizeListener);
-		brushType.addActionListener(optionListen);
-		brushType.setActionCommand("brush");
 		color.addActionListener(optionListen);
 		color.setActionCommand("color");
 		bgColor.addActionListener(optionListen);
 		bgColor.setActionCommand("bgcolor");
+
+		BrushListener brushListener = new BrushListener();
+		circleBrush.addActionListener(brushListener);
+		circleBrush.setActionCommand("circle");
+		squareBrush.addActionListener(brushListener);
+		squareBrush.setActionCommand("square");
+		triangleBrush.addActionListener(brushListener);
+		triangleBrush.setActionCommand("triangle");
 
 		EditMenuListener editListener = new EditMenuListener();
 		undo.addActionListener(editListener);
@@ -241,7 +262,10 @@ public class Art {
 		file.add(exit);
 
 		options.add(size);
-		options.add(brushType);
+		options.add(brushSelect);
+		brushSelect.add(circleBrush);
+		brushSelect.add(squareBrush);
+		brushSelect.add(triangleBrush);
 		options.add(color);
 		options.add(bgColor);
 
@@ -256,7 +280,6 @@ public class Art {
 		menubar.add(game);
 	}
 
-	// XXX: Main:
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
 			try {
@@ -268,9 +291,6 @@ public class Art {
 			new Art();
 		});
 	}
-
-	// TODO: examing having one action listener for all or each one separate or one
-	// to handle certain groups that are similar (save/save as)
 
 	class FrameListener implements WindowListener {
 
@@ -341,7 +361,6 @@ public class Art {
 			}
 
 			else if (command.equals("open")) {
-				// TODO: finish this action:
 
 				JFileChooser fileChooser = new JFileChooser();
 				fileChooser.setCurrentDirectory(new File("C:/Users/" + System.getProperty("user.name") + "/Desktop"));
@@ -369,9 +388,7 @@ public class Art {
 			}
 
 			else if (command.equals("save")) {
-				// XXX: the next line is for testing, remove in later versions:
 				save();
-
 			} else if (command.equals("saveAs")) {
 				selectFile();
 				if (drawingFile != null) {
@@ -419,7 +436,6 @@ public class Art {
 			} else {
 				// cancel or window closed: (or error, but we will assume no errors)
 			}
-			// XXX: file may still be null at this point
 		}
 
 		public void save() {
@@ -459,7 +475,7 @@ public class Art {
 				if (c != null) {
 					panel.setBrushColor(c);
 				}
-			} else if (command.equals("bgcolor")) { // TODO: add a background color changer to the menu!
+			} else if (command.equals("bgcolor")) {
 				Color bg = JColorChooser.showDialog(panel, "Choose a background color", null);
 				if (bg != null) {
 					panel.setBackground(new Color(bg.getRGB()));
@@ -478,8 +494,9 @@ public class Art {
 					editList.add(strokeList.remove(strokeList.size() - 1));
 				}
 			} else if (command.equals("redo")) {
-				if (editList.size() > 0)
+				if (editList.size() > 0) {
 					strokeList.add(editList.remove(editList.size() - 1));
+				}
 			}
 		}
 
@@ -617,6 +634,22 @@ public class Art {
 
 	}
 
+	class BrushListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (e.getActionCommand().equals("circle")) {
+				brushType = Mark.CIRCLE_BRUSH;
+			} else if (e.getActionCommand().equals("square")) {
+				brushType = Mark.SQUARE_BRUSH;
+			} else if (e.getActionCommand().equals("triangle")) {
+				brushType = Mark.TRIANGLE_BRUSH;
+			}
+//			System.out.println(e.getActionCommand());
+		}
+
+	}
+
 	class RainbowPanel extends JPanel {
 
 		final int sleepVal = 5;
@@ -646,53 +679,9 @@ public class Art {
 
 		public RainbowPanel() {
 			mousePos = new Point(0, 0);
-//			RGBColor();
 			animate();
-//			mouseWheel();
 			brushColor = new Color(0, 0, 0);
-//			gradient();
-//            diag();
-
-//			yeet();
 		}
-
-//		public void diag() {
-//			new Thread() {
-//				public void run() {
-//					try {
-//						Thread.sleep(10);
-//					} catch (InterruptedException e) {
-//						e.printStackTrace();
-//					}
-//					for (;;) {
-//						System.out.println("cWidth: " + circleWidth);
-//						System.out.println("diameter: " + mouseTrack.getDiameter());
-//						System.out.println("userSize: " + sizeListener.getUserSize());
-//					}
-//				}
-//			}.start();
-//		}
-
-//		public void yeet() {
-//			new Thread() {
-//				public void run() {
-//					double angle = 0;
-//					for (;;) {
-//						System.out.println("tan(" + Math.toDegrees(angle) + "):");
-//						System.out.println(Math.tan(angle));
-//						System.out.println((int) Math.tan(angle));
-//						yeet2 = (int) Math.round(Math.tan(angle));
-//						angle += Math.toRadians(1);
-//						try {
-//							Thread.sleep(10);
-//						} catch (InterruptedException e) {
-//							// TODO Auto-generated catch block
-//							e.printStackTrace();
-//						}
-//					}
-//				}
-//			}.start();
-//		}
 
 		public void animate() {
 			Thread animate = new Thread() {
@@ -712,7 +701,6 @@ public class Art {
 						try {
 							Thread.sleep(10); // REFRESH RATE: 10ms
 						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						repaint();
@@ -782,23 +770,45 @@ public class Art {
 //				g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
 //						m.getHeight());
 //			}
+
 			if (strokeList != null && strokeList.size() > 0) {
 				for (BrushStroke b : strokeList) {
 					if (b.getMarks() != null && b.getMarks().size() > 0) {
 						for (Mark m : b.getMarks()) {
 							g2d.setColor(m.getColor());
-							g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
-									m.getHeight());
+							if (m.getBrush() == Mark.CIRCLE_BRUSH) {
+								g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2),
+										m.getWidth(), m.getHeight());
+							} else if (m.getBrush() == Mark.SQUARE_BRUSH) {
+								g2d.fillRect(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2),
+										m.getWidth(), m.getHeight());
+							} else {
+								int[] xPoints = { m.getX(), m.getX() - m.getWidth() / 2, m.getX() + m.getWidth() / 2 };
+								int[] yPoints = { m.getY() - m.getHeight() / 2, m.getY() + m.getHeight() / 2,
+										m.getY() + m.getHeight() / 2 };
+								g2d.fillPolygon(xPoints, yPoints, 3);
+							}
 
 						}
 					}
 				}
 			}
 			diameter = mouseTrack.getDiameter();
-			diameter = mouseTrack.getDiameter();
 			g2d.setColor(brushColor);
-			g2d.fillOval((int) mouseTrack.getMouseX() - (diameter / 2), (int) mouseTrack.getMouseY() - (diameter / 2),
-					diameter, diameter);
+//			System.out.println(brushType == Mark.SQUARE_BRUSH);
+			if (brushType == Mark.CIRCLE_BRUSH) {
+				g2d.fillOval((int) mouseTrack.getMouseX() - (diameter / 2),
+						(int) mouseTrack.getMouseY() - (diameter / 2), diameter, diameter);
+			} else if (brushType == Mark.SQUARE_BRUSH) {
+				g2d.fillRect((int) mouseTrack.getMouseX() - (diameter / 2),
+						(int) mouseTrack.getMouseY() - (diameter / 2), diameter, diameter);
+			} else if (brushType == Mark.TRIANGLE_BRUSH) {
+				int[] xPoints = { mouseTrack.getMouseX(), mouseTrack.getMouseX() - diameter / 2,
+						mouseTrack.getMouseX() + diameter / 2 };
+				int[] yPoints = { mouseTrack.getMouseY() - diameter / 2, mouseTrack.getMouseY() + diameter / 2,
+						mouseTrack.getMouseY() + diameter / 2 };
+				g2d.fillPolygon(xPoints, yPoints, 3);
+			}
 		}
 	}
 
@@ -829,7 +839,7 @@ public class Art {
 		}
 
 		public void addMark(MouseEvent e) {
-			markList.add(new Mark(e.getPoint(), new Dimension(diameter, diameter), panel.getBrushColor()));
+			markList.add(new Mark(e.getPoint(), new Dimension(diameter, diameter), panel.getBrushColor(), brushType));
 			changed = true;
 		}
 
@@ -837,18 +847,10 @@ public class Art {
 		public void mouseDragged(MouseEvent e) {
 			mousePos = new Point(e.getX(), e.getY());
 			addMark(e);
-//			System.out.println(markList.size());
-//			mousePos = e.getPoint();
-//			markList.add(new Mark(mousePos, new Dimension(diameter, diameter), markColor));
-//                    new Point(arg0.getX(), arg0.getY());
-//			pointList.add(mousePos);
-//			sizeList.add(diameter);
 		}
 
 		@Override
 		public void mouseMoved(MouseEvent e) {
-			// TODO: examine this line. (first drawn mark when dragged is not re-drawn when
-			// the mousePos changed when released)
 			mousePos = new Point(e.getX(), e.getY());
 		}
 
@@ -920,6 +922,7 @@ public class Art {
 
 		public void clear() {
 			markList.removeAll(markList);
+			strokeList.removeAll(strokeList);
 		}
 
 		public boolean isChanged() {
@@ -932,14 +935,7 @@ public class Art {
 
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			mousePos = new Point(e.getX(), e.getY());
-			if (e.getButton() == MouseEvent.BUTTON1) {
-				addMark(e);
-			} else if (e.getButton() == MouseEvent.BUTTON3) {
-				incrementColorPattern();
-			} else if (e.getButton() == MouseEvent.BUTTON2) {
-				clear();
-			}
+
 		}
 
 		@Override
@@ -953,7 +949,10 @@ public class Art {
 		@Override
 		public void mousePressed(MouseEvent e) {
 			strokeList.add(new BrushStroke());
-			mouseClicked(e);
+			mousePos = new Point(e.getX(), e.getY());
+			if (e.getButton() == MouseEvent.BUTTON1) {
+				addMark(e);
+			}
 			strokeList.get(strokeList.size() - 1).setMarks(markList);
 		}
 
