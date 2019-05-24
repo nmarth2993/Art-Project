@@ -57,7 +57,7 @@ may also be saved to an image file
  * re-draw that area)
  */
 
-//XXX: gradients maybe at the end if I have time
+//XXX: gradients/ maybe at the end if I have time
 /*XXX: note that animation won't be saved, as png doesn't support it --> support different
  * file types: 
  * gif: +animation, -transparency
@@ -89,8 +89,8 @@ public class Art {
 	JMenuItem undo;
 	JMenuItem redo;
 
-	JMenu about;
-	JMenuItem aboutme;
+	JMenu game;
+	JMenuItem playGame;
 
 	File drawingFile;
 
@@ -199,10 +199,8 @@ public class Art {
 		redo.setAccelerator(KeyStroke.getKeyStroke("ctrl Y"));
 		redo.setMnemonic('r');
 
-		about = new JMenu("About");
-		about.setMnemonic('a');
-		aboutme = new JMenuItem("About");
-		aboutme.setMnemonic('a');
+		game = new JMenu("Game");
+		playGame = new JMenuItem("Play Game");
 
 		// TODO: using one actionListener for each menu like below
 
@@ -233,8 +231,8 @@ public class Art {
 		redo.addActionListener(editListener);
 		redo.setActionCommand("redo");
 
-		AboutListener aboutListener = new AboutListener();
-		aboutme.addActionListener(aboutListener);
+		GameListener gameListener = new GameListener();
+		playGame.addActionListener(gameListener);
 
 		file.add(newFile);
 		file.add(open);
@@ -250,12 +248,12 @@ public class Art {
 		edit.add(undo);
 		edit.add(redo);
 
-		about.add(aboutme);
+		game.add(playGame);
 
 		menubar.add(file);
 		menubar.add(options);
 		menubar.add(edit);
-		menubar.add(about);
+		menubar.add(game);
 	}
 
 	// XXX: Main:
@@ -487,23 +485,10 @@ public class Art {
 
 	}
 
-	class AboutListener implements ActionListener {
-
-		JFrame frame;
-		JPanel panel;
-		JLabel label;
-
+	class GameListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			frame = new JFrame("About");
-			panel = new JPanel();
-			label = new JLabel("This is some info");
-			panel.add(label);
-			frame.setContentPane(panel);
-			frame.setPreferredSize(new Dimension(150, 150));
-			frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-			frame.setVisible(true);
-			frame.pack();
+			new TicTacToe();
 		}
 
 	}
