@@ -1,14 +1,10 @@
+
 /*
  * Nicholas Marthinuss
  * https://github.com/nmarth2993
  * 3/1/19
  * Drawing Application
  */
-
-//I could re-code some of this but keep most of the previous code to make it more clean.
-//Consider doing it, as it would be easier to work with.
-//Do save/save As soon! It should be somewhat simple (have a File reference in memory)
-//Opening images also shouldnâ€™t be so bad I think.
 
 import java.awt.*;
 import java.awt.event.*;
@@ -20,28 +16,6 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-/*
- *
- *
- *
- *
- * Things to include:
- * menu:
- *         in the menu: input size
- *         color picker
- *         animation types
- *             gradients, more types of paints idk
- *             speed
- *             colors (JColorChooser)
- *
- * hide/show menu button
- * save drawing to a file? how do dis?? -- Robot class
- *
- *
- *
- *
- */
 
 /*
  * Main Project:
@@ -83,7 +57,7 @@ may also be saved to an image file
  * re-draw that area)
  */
 
-//XXX: gradients/ maybe at the end if I have time
+//XXX: gradients maybe at the end if I have time
 /*XXX: note that animation won't be saved, as png doesn't support it --> support different
  * file types: 
  * gif: +animation, -transparency
@@ -126,7 +100,6 @@ public class Art {
 	ArrayList<BrushStroke> strokeList;
 	ArrayList<BrushStroke> editList;
 
-	// TODO: remove this, temporary
 	Image img;
 
 	/*
@@ -485,10 +458,14 @@ public class Art {
 				System.out.println("brushType");
 			} else if (command.equals("color")) {
 				Color c = JColorChooser.showDialog(panel, "Choose a color", null);
-				panel.setBrushColor(c);
+				if (c != null) {
+					panel.setBrushColor(c);
+				}
 			} else if (command.equals("bgcolor")) { // TODO: add a background color changer to the menu!
 				Color bg = JColorChooser.showDialog(panel, "Choose a background color", null);
-				panel.setBackground(new Color(bg.getRGB()));
+				if (bg != null) {
+					panel.setBackground(new Color(bg.getRGB()));
+				}
 			}
 		}
 	}
@@ -499,16 +476,13 @@ public class Art {
 		public void actionPerformed(ActionEvent e) {
 			String command = e.getActionCommand();
 			if (command.equals("undo")) {
-				if (strokeList.size() != 0) {
+				if (strokeList.size() > 0) {
 					editList.add(strokeList.remove(strokeList.size() - 1));
 				}
-				System.out.println(":");
 			} else if (command.equals("redo")) {
-				if (editList.size() != 0) {
+				if (editList.size() > 0)
 					strokeList.add(editList.remove(editList.size() - 1));
-				}
 			}
-			System.out.println(command);
 		}
 
 	}
@@ -671,8 +645,7 @@ public class Art {
 		int x = 0;
 		int y = 300;
 
-		int diameter; // TODO: phase this out later (make a size variable): each shape will have a
-						// length and width, and multiply length * size and width * size to scale it
+		int diameter; // TODO: phase this out later
 
 //		int mouseScroll;
 
@@ -692,8 +665,6 @@ public class Art {
 			animate();
 //			mouseWheel();
 			brushColor = new Color(0, 0, 0);
-			strokeList = new ArrayList<BrushStroke>();
-			editList = new ArrayList<BrushStroke>();
 //			gradient();
 //            diag();
 
@@ -819,26 +790,32 @@ public class Art {
 			 * new GradientPaint(x, y, Color.WHITE, x + 300, y + 100, c1); }
 			 * g2d.setPaint(paint);
 			 */
-			for (BrushStroke b : strokeList) {
-				for (Mark m : b.getMarks()) {
-					g2d.setColor(m.getColor());
-					g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
-							m.getHeight());
+
+			// XXX: this is the previous drawing code
+//			for (Mark m : markList) {
+//				g2d.setColor(m.getColor());
+//				g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
+//						m.getHeight());
+//			}
+			if (strokeList != null && strokeList.size() > 0) {
+				for (BrushStroke b : strokeList) {
+					if (b.getMarks() != null && b.getMarks().size() > 0) {
+						for (Mark m : b.getMarks()) {
+							g2d.setColor(m.getColor());
+							g2d.fillOval(m.getX() - (m.getWidth() / 2), m.getY() - (m.getHeight() / 2), m.getWidth(),
+									m.getHeight());
+
+						}
+					}
 				}
 			}
 			diameter = mouseTrack.getDiameter();
 			diameter = mouseTrack.getDiameter();
-			//
 			g2d.setColor(brushColor);
 			g2d.fillOval((int) mouseTrack.getMouseX() - (diameter / 2), (int) mouseTrack.getMouseY() - (diameter / 2),
 					diameter, diameter);
 		}
 	}
-
-	/*
-	 * TODO: for gradient painting... take the min/max x and y values and then yeet
-	 * it
-	 */
 
 	class MouseMove implements MouseMotionListener, MouseWheelListener, MouseListener {
 		Point mousePos;
@@ -860,7 +837,8 @@ public class Art {
 			colorPattern = 1;
 			changed = false;
 			markList = new ArrayList<Mark>();
-
+			strokeList = new ArrayList<BrushStroke>();
+			editList = new ArrayList<BrushStroke>();
 //			pointList = new ArrayList<Point>();
 //			sizeList = new ArrayList<Integer>();
 		}
@@ -905,7 +883,7 @@ public class Art {
 			return (int) mousePos.getY();
 		}
 
-		public ArrayList<Mark> getMarkList() { // TODO: update the mouseListener to add brushstrokes
+		public ArrayList<Mark> getMarkList() {
 			return markList;
 		}
 
@@ -989,10 +967,14 @@ public class Art {
 
 		@Override
 		public void mousePressed(MouseEvent e) {
+			strokeList.add(new BrushStroke());
+			mouseClicked(e);
+			strokeList.get(strokeList.size() - 1).setMarks(markList);
 		}
 
 		@Override
 		public void mouseReleased(MouseEvent e) {
+			markList = new ArrayList<Mark>();
 		}
 	}
 }
