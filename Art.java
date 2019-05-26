@@ -923,6 +923,7 @@ public class Art {
 		public void clear() {
 			markList.removeAll(markList);
 			strokeList.removeAll(strokeList);
+			editList.removeAll(editList);
 		}
 
 		public boolean isChanged() {
